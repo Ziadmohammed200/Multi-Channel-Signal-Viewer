@@ -17,7 +17,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QIcon, QColor, QCursor
 from PyQt5.QtCore import Qt, QTimer, QSize, pyqtSignal, QObject, QFileInfo
-from sympy.physics.control.control_plots import matplotlib
+
 
 from GluedSignalViewer import GluedSignalViewer as glueViewer
 from matplotlib.widgets import RectangleSelector
@@ -290,8 +290,9 @@ class Signal:
 class CustomToolbar(NavigationToolbar):
     """A custom toolbar that includes additional control buttons."""
 
-    pause_animation = pyqtSignal()
-    play_animation = pyqtSignal()
+    # pause_animation = pyqtSignal()
+    # play_animation = pyqtSignal()
+    toggle_animation = pyqtSignal()
     change_color = pyqtSignal()
     save_image = pyqtSignal()
     save_pdf = pyqtSignal()
@@ -309,19 +310,26 @@ class CustomToolbar(NavigationToolbar):
         self.clear()
         self.setStyleSheet("QToolBar { border: none; }")
 
-        # Play Button
-        self.play_btn = QToolButton()
-        self.play_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
-        self.play_btn.setToolTip("Play Animation")
-        self.play_btn.clicked.connect(self.play_animation.emit)
-        self.addWidget(self.play_btn)
+        # # Play Button
+        # self.play_btn = QToolButton()
+        # self.play_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        # self.play_btn.setToolTip("Play Animation")
+        # self.play_btn.clicked.connect(self.play_animation.emit)
+        # self.addWidget(self.play_btn)
+        #
+        # # Pause Button
+        # self.pause_btn = QToolButton()
+        # self.pause_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
+        # self.pause_btn.setToolTip("Pause Animation")
+        # self.pause_btn.clicked.connect(self.pause_animation.emit)
+        # self.addWidget(self.pause_btn)
 
-        # Pause Button
-        self.pause_btn = QToolButton()
-        self.pause_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
-        self.pause_btn.setToolTip("Pause Animation")
-        self.pause_btn.clicked.connect(self.pause_animation.emit)
-        self.addWidget(self.pause_btn)
+        # Toggle Play/Pause Button
+        self.toggle_btn = QToolButton()
+        self.toggle_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        self.toggle_btn.setToolTip("Play Animation")
+        self.toggle_btn.clicked.connect(self.toggle_animation)
+        self.addWidget(self.toggle_btn)
 
         # Rewind Button
         self.rewind_btn = QToolButton()
@@ -471,8 +479,9 @@ class SignalViewer(QWidget):
 
         #  toolbar signals
 
-        self.toolbar.pause_animation.connect(self.pause_animation)
-        self.toolbar.play_animation.connect(self.play_animation)
+        # self.toolbar.pause_animation.connect(self.pause_animation)
+        # self.toolbar.play_animation.connect(self.play_animation)
+        self.toolbar.toggle_animation.connect(self.toggle_animation)
         self.toolbar.save_image.connect(self.save_plot_image)
         self.toolbar.save_pdf.connect(self.save_plot_pdf)
         self.toolbar.rewind_animation.connect(self.rewind_animation)
@@ -547,6 +556,12 @@ class SignalViewer(QWidget):
         self.clear_btn.clicked.connect(self.clear_signal)
         self.controls_layout.addWidget(self.clear_btn)
 
+        # Signal Name Editor
+        self.name_editor = QLineEdit()
+        self.name_editor.setPlaceholderText("Enter Signal Name")
+        self.name_editor.editingFinished.connect(self.update_signal_name)
+        self.controls_layout.addWidget(self.name_editor)
+
         self.controls_layout.addStretch()
 
         #  animation parameters
@@ -599,6 +614,7 @@ class SignalViewer(QWidget):
         self.visibility_checkbox.setEnabled(enabled)
         self.move_btn.setEnabled(enabled)
         self.clear_btn.setEnabled(enabled)
+        self.name_editor.setEnabled(enabled)
 
     def signal_selected(self):
         """Update the selected signal when the user selects a signal from the ComboBox."""
@@ -606,6 +622,8 @@ class SignalViewer(QWidget):
         if current_index >= 0:
             self.selected_signal_id = self.signal_selector.itemData(current_index)
             self.update_signal_controls()
+            signal = self.signals[self.selected_signal_id]
+            self.name_editor.setText(signal.name)
         else:
             self.selected_signal_id = None
             self.set_controls_enabled(False)
@@ -631,6 +649,23 @@ class SignalViewer(QWidget):
         self.next_signal_id += 1
         # Automatically select the newly added signal
         self.signal_selector.setCurrentIndex(self.signal_selector.count() - 1)
+
+    def update_signal_name(self):
+        """Update the name of the selected signal and refresh the ComboBox and plot legend."""
+        if self.selected_signal_id is not None:
+            new_name = self.name_editor.text().strip()
+            if new_name:
+                signal = self.signals[self.selected_signal_id]
+                signal.name = new_name
+
+                # Update the ComboBox entry
+                current_index = self.signal_selector.currentIndex()
+                self.signal_selector.setItemText(current_index, new_name)
+
+                # Update the plot legend
+                signal.line.set_label(new_name)
+                self.ax.legend(loc='upper right')
+                self.canvas.draw()
 
     def clear_signal(self):
         """Remove a signal based on the selected signal."""
@@ -719,11 +754,10 @@ class SignalViewer(QWidget):
 
                 # Update the legend
                 handles, labels = self.ax.get_legend_handles_labels()
-                # legend = self.ax.legend(loc='upper right')  # Set the desired location
-                # legend.set_draggable(False)  # Make the legend non-movable
+
 
                 if any(label and not label.startswith('_') for label in labels):
-                    self.ax.legend()
+                    self.ax.legend(loc='upper right')
                 else:
                     legend = self.ax.get_legend()
                     if legend:
@@ -740,6 +774,9 @@ class SignalViewer(QWidget):
             self.ax.grid(True)
             self.next_signal_id = self.next_signal_id - 1
             self.slider.setValue(0)
+            self.timer.stop()
+            self.is_paused=False
+            self.toolbar.toggle_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
 
         # Redraw the canvas to reflect changes
         self.canvas.draw()
@@ -812,17 +849,18 @@ class SignalViewer(QWidget):
 
                     #  unique id for the signal
                     signal_id = self.next_signal_id
+                    signal_name = os.path.splitext(os.path.basename(file_path))[0]
 
 
                     # unique color for the signal
                     color = self.get_unique_color()
 
                     #  Signal instance
-                    signal = Signal(name=f"Signal {signal_id}", time=time, amplitude=amplitude, color=color)
+                    signal = Signal(name=signal_name, time=time, amplitude=amplitude, color=color)
 
                     # Plot the signal with empty data initially
                     line, = self.ax.plot([], [], label=signal.name, color=signal.color)
-                    self.ax.legend()
+                    self.ax.legend(loc='upper right')
                     self.canvas.draw()
                     self.signals[signal_id] = signal
                     signal.line = line
@@ -861,6 +899,7 @@ class SignalViewer(QWidget):
                 # Start animation if not already running
                 if not self.timer.isActive():
                     self.timer.start()
+                    self.toolbar.toggle_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
 
             # If more than 2 signals, rewind animation
             if self.next_signal_id > 2:
@@ -928,25 +967,48 @@ class SignalViewer(QWidget):
             # Stop the timer when the animation is complete
             self.timer.stop()
 
-    def pause_animation(self):
-        """Pause the animation."""
-        if self.signals:
+    def toggle_animation(self):
+        """Toggle between play and pause for the animation."""
+        if self.is_paused:
+            # Resume the animation
+            self.is_paused = False
+            self.timer.start()
+            self.toolbar.toggle_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
+            self.toolbar.toggle_btn.setToolTip("Pause Animation")
+            if self.isLinked and self.linker:
+                # Resume the linked viewer as well
+                self.linker.is_paused = False
+                self.linker.timer.start()
+        else:
+            # Pause the animation
             self.is_paused = True
             self.timer.stop()
+            self.toolbar.toggle_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+            self.toolbar.toggle_btn.setToolTip("Play Animation")
             if self.isLinked and self.linker:
                 # Pause the linked viewer as well
                 self.linker.is_paused = True
                 self.linker.timer.stop()
 
-
-    def play_animation(self):
-        """Play or resume the animation."""
-        if self.signals and self.is_paused:
-            self.is_paused = False
-            self.timer.start()
-        if self.isLinked and self.linker:
-            self.linker.is_paused = False
-            self.linker.timer.start()
+    # def pause_animation(self):
+    #     """Pause the animation."""
+    #     if self.signals:
+    #         self.is_paused = True
+    #         self.timer.stop()
+    #         if self.isLinked and self.linker:
+    #             # Pause the linked viewer as well
+    #             self.linker.is_paused = True
+    #             self.linker.timer.stop()
+    #
+    #
+    # def play_animation(self):
+    #     """Play or resume the animation."""
+    #     if self.signals and self.is_paused:
+    #         self.is_paused = False
+    #         self.timer.start()
+    #     if self.isLinked and self.linker:
+    #         self.linker.is_paused = False
+    #         self.linker.timer.start()
 
     def rewind_animation(self):
         """Rewind the animation to the beginning."""
@@ -1497,89 +1559,89 @@ class SignalViewer(QWidget):
         filtered_time = filtered_data[:, 0]
         return filtered_amplitude, filtered_time
 
-class GlueDialog(QDialog):
-    """Dialog to input parameters for gluing two signals with enhanced GUI."""
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Glue Signals Parameters")
-        self.resize(350, 250)
-
-        # Main layout
-        main_layout = QVBoxLayout(self)
-
-
-        # Signal 1 group
-        group_signal1 = QGroupBox("Signal 1 Settings")
-        layout_signal1 = QFormLayout()
-        self.start_signal1 = QSpinBox()
-        self.end_signal1 = QSpinBox()
-        self.start_signal1.setRange(0, 60001)
-        self.end_signal1.setRange(0, 60001)
-        self.start_signal1.setToolTip("Select the start point for Signal 1")
-        self.end_signal1.setToolTip("Select the end point for Signal 1")
-        layout_signal1.addRow(QLabel("Start (in sec):"), self.start_signal1)
-        layout_signal1.addRow(QLabel("End (in sec):"), self.end_signal1)
-        group_signal1.setLayout(layout_signal1)
-
-        # Signal 2 group
-        group_signal2 = QGroupBox("Signal 2 Settings")
-        layout_signal2 = QFormLayout()
-        self.start_signal2 = QSpinBox()
-        self.end_signal2 = QSpinBox()
-        self.start_signal2.setRange(0, 60001)
-        self.end_signal2.setRange(0, 60001)
-        self.start_signal2.setToolTip("Select the start point for Signal 2")
-        self.end_signal2.setToolTip("Select the end point for Signal 2")
-        layout_signal2.addRow(QLabel("Start (in sec):"), self.start_signal2)
-        layout_signal2.addRow(QLabel("End (in sec):"), self.end_signal2)
-        group_signal2.setLayout(layout_signal2)
-
-        # Interpolation order group
-        group_interpolation = QGroupBox("Interpolation Settings")
-        layout_interpolation = QFormLayout()
-        self.interpolation_slider = QSlider(Qt.Horizontal)
-        self.interpolation_slider.setRange(1, 3)
-        self.interpolation_slider.setTickPosition(QSlider.TicksBelow)
-        self.interpolation_slider.setTickInterval(1)
-        self.interpolation_slider.setToolTip("Choose interpolation order (1:3)")
-        layout_interpolation.addRow(QLabel("Interpolation Order (1:3):"), self.interpolation_slider)
-        group_interpolation.setLayout(layout_interpolation)
-
-        # Buttons layout
-        button_layout = QHBoxLayout()
-        self.confirm_button = QPushButton("Glue")
-        self.cancel_button = QPushButton("Cancel")
-        self.confirm_button.setStyleSheet("background-color: #4CAF50; color: white;")
-        self.cancel_button.setStyleSheet("background-color: #f44336; color: white;")
-        button_layout.addWidget(self.confirm_button)
-        button_layout.addWidget(self.cancel_button)
-
-        # Add everything to the main layout
-        main_layout.addWidget(group_signal1)
-        main_layout.addWidget(group_signal2)
-        main_layout.addWidget(group_interpolation)
-        main_layout.addLayout(button_layout)
-
-        # Connect buttons
-        self.confirm_button.clicked.connect(self.accept)
-        self.cancel_button.clicked.connect(self.reject)
-
-    def get_parameters(self):
-        """Return the glue parameters as a tuple."""
-        if self.start_signal1.value()<self.end_signal1.value() and self.start_signal2.value()<self.end_signal2.value():
-            return (self.start_signal1.value(), self.end_signal1.value(),
-                    self.start_signal2.value(), self.end_signal2.value(),
-                    self.interpolation_slider.value())
-        else:
-            msg_box = QMessageBox()
-            msg_box.setWindowTitle("Error!")
-            msg_box.setText("start time should be less than end time!.")
-            msg_box.setIcon(QMessageBox.Warning)  # Set the icon
-            msg_box.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)  # Add buttons
-
-            # Show the message box and get the user's response
-            msg_box.exec_()
+# class GlueDialog(QDialog):
+#     """Dialog to input parameters for gluing two signals with enhanced GUI."""
+#
+#     def __init__(self, parent=None):
+#         super().__init__(parent)
+#         self.setWindowTitle("Glue Signals Parameters")
+#         self.resize(350, 250)
+#
+#         # Main layout
+#         main_layout = QVBoxLayout(self)
+#
+#
+#         # Signal 1 group
+#         group_signal1 = QGroupBox("Signal 1 Settings")
+#         layout_signal1 = QFormLayout()
+#         self.start_signal1 = QSpinBox()
+#         self.end_signal1 = QSpinBox()
+#         self.start_signal1.setRange(0, 60001)
+#         self.end_signal1.setRange(0, 60001)
+#         self.start_signal1.setToolTip("Select the start point for Signal 1")
+#         self.end_signal1.setToolTip("Select the end point for Signal 1")
+#         layout_signal1.addRow(QLabel("Start (in sec):"), self.start_signal1)
+#         layout_signal1.addRow(QLabel("End (in sec):"), self.end_signal1)
+#         group_signal1.setLayout(layout_signal1)
+#
+#         # Signal 2 group
+#         group_signal2 = QGroupBox("Signal 2 Settings")
+#         layout_signal2 = QFormLayout()
+#         self.start_signal2 = QSpinBox()
+#         self.end_signal2 = QSpinBox()
+#         self.start_signal2.setRange(0, 60001)
+#         self.end_signal2.setRange(0, 60001)
+#         self.start_signal2.setToolTip("Select the start point for Signal 2")
+#         self.end_signal2.setToolTip("Select the end point for Signal 2")
+#         layout_signal2.addRow(QLabel("Start (in sec):"), self.start_signal2)
+#         layout_signal2.addRow(QLabel("End (in sec):"), self.end_signal2)
+#         group_signal2.setLayout(layout_signal2)
+#
+#         # Interpolation order group
+#         group_interpolation = QGroupBox("Interpolation Settings")
+#         layout_interpolation = QFormLayout()
+#         self.interpolation_slider = QSlider(Qt.Horizontal)
+#         self.interpolation_slider.setRange(1, 3)
+#         self.interpolation_slider.setTickPosition(QSlider.TicksBelow)
+#         self.interpolation_slider.setTickInterval(1)
+#         self.interpolation_slider.setToolTip("Choose interpolation order (1:3)")
+#         layout_interpolation.addRow(QLabel("Interpolation Order (1:3):"), self.interpolation_slider)
+#         group_interpolation.setLayout(layout_interpolation)
+#
+#         # Buttons layout
+#         button_layout = QHBoxLayout()
+#         self.confirm_button = QPushButton("Glue")
+#         self.cancel_button = QPushButton("Cancel")
+#         self.confirm_button.setStyleSheet("background-color: #4CAF50; color: white;")
+#         self.cancel_button.setStyleSheet("background-color: #f44336; color: white;")
+#         button_layout.addWidget(self.confirm_button)
+#         button_layout.addWidget(self.cancel_button)
+#
+#         # Add everything to the main layout
+#         main_layout.addWidget(group_signal1)
+#         main_layout.addWidget(group_signal2)
+#         main_layout.addWidget(group_interpolation)
+#         main_layout.addLayout(button_layout)
+#
+#         # Connect buttons
+#         self.confirm_button.clicked.connect(self.accept)
+#         self.cancel_button.clicked.connect(self.reject)
+#
+#     def get_parameters(self):
+#         """Return the glue parameters as a tuple."""
+#         if self.start_signal1.value()<self.end_signal1.value() and self.start_signal2.value()<self.end_signal2.value():
+#             return (self.start_signal1.value(), self.end_signal1.value(),
+#                     self.start_signal2.value(), self.end_signal2.value(),
+#                     self.interpolation_slider.value())
+#         else:
+#             msg_box = QMessageBox()
+#             msg_box.setWindowTitle("Error!")
+#             msg_box.setText("start time should be less than end time!.")
+#             msg_box.setIcon(QMessageBox.Warning)  # Set the icon
+#             msg_box.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)  # Add buttons
+#
+#             # Show the message box and get the user's response
+#             msg_box.exec_()
 
 class CustomToolbar2(QWidget):
     def __init__(self, parent=None):
@@ -1839,6 +1901,7 @@ class MainWindow(QMainWindow):
         self.start2 = start2  # start time of the second signal
         self.end2 = end2  # end time of the second signal
         self.kind = 1
+        self.viewer_glued.assign_segments(self.segment1, self.segment2)
 
         signal1_segment, signal1_time = self.viewer1.get_signal_segment(start1, end1 )
         signal2_segment, signal2_time = self.viewer2.get_signal_segment(start2, end2 )
@@ -1919,19 +1982,19 @@ class MainWindow(QMainWindow):
 
         # Add signal to target viewer
         print(f"id before : {target_viewer.next_signal_id}")
-        signal.name=f"Signal {target_viewer.next_signal_id}"
+        #signal.name=f"Signal {target_viewer.next_signal_id}"
         target_viewer.signals[target_viewer.next_signal_id] = signal
-        signal.color=target_viewer.get_unique_color()
+        #signal.color=target_viewer.get_unique_color()
 
         # Plot the signal in the target viewer
         line, = target_viewer.ax.plot([], [], label=signal.name, color=signal.color)
         signal.line = line
-        target_viewer.ax.legend()
+        target_viewer.ax.legend(loc='upper right')
         target_viewer.canvas.draw()
 
         # Add the signal to the ComboBox in the target viewer
         target_viewer.add_signal(signal)
-        target_viewer.signal_selector.addItem(signal.name, target_viewer.next_signal_id)
+        #target_viewer.signal_selector.addItem(signal.name, target_viewer.next_signal_id)
 
         print(f"id after : {target_viewer.next_signal_id}")
 
@@ -1948,10 +2011,12 @@ class MainWindow(QMainWindow):
         # Update slider maximum in target viewer
         target_viewer.update_slider_maximum()
         target_viewer.rewind_animation()
+        target_viewer.toolbar.toggle_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
 
         # Start animation in target viewer if not already running
         if not target_viewer.timer.isActive():
             target_viewer.timer.start()
+            target_viewer.toolbar.toggle_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
 
         QMessageBox.information(self, "Move Signal", f"Signal '{signal.name}' moved successfully.")
 
