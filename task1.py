@@ -1901,7 +1901,7 @@ class MainWindow(QMainWindow):
         self.start2 = start2  # start time of the second signal
         self.end2 = end2  # end time of the second signal
         self.kind = 1
-        self.viewer_glued.assign_segments(self.segment1, self.segment2)
+
 
         signal1_segment, signal1_time = self.viewer1.get_signal_segment(start1, end1 )
         signal2_segment, signal2_time = self.viewer2.get_signal_segment(start2, end2 )
@@ -1909,9 +1909,14 @@ class MainWindow(QMainWindow):
         self.segment2 = signal2_segment
         self.time1 = signal1_time
         self.time2 = signal2_time
+        print("67")
+        self.viewer_glued.assign_segments(self.segment1, self.segment2)
+
+        print("69")
 
         glued_signal = self.concatenate_signals()
         glued_window = QMainWindow(self)
+        print("vghhg")
         self.viewer_glued.assign_glued_signal(glued_signal)
         self.viewer_glued.plot()
         glued_window.setWindowTitle("Glued Signal Viewer")

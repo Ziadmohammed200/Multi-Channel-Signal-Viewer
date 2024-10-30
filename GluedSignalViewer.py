@@ -1,5 +1,9 @@
+import os
+
+
 from PyQt5.QtWidgets import (
-    QVBoxLayout, QHBoxLayout, QLabel, QSlider, QComboBox, QGroupBox, QFormLayout, QWidget, QPushButton, QMessageBox
+    QVBoxLayout, QHBoxLayout, QLabel, QSlider, QComboBox, QGroupBox, QFormLayout, QWidget, QPushButton, QMessageBox,
+    QInputDialog
 )
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon
@@ -11,6 +15,8 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from statistics import mean, stdev
+from reportlab.platypus import PageBreak
 
 
 class GluedSignalViewer(QWidget):
@@ -77,6 +83,9 @@ class GluedSignalViewer(QWidget):
     def assign_glued_signal(self, glued_signal):
         self.glued_signal = glued_signal
 
+
+
+
     def plot(self):
         """Plot the glued signal with proper axis settings."""
         self.axis.clear()
@@ -106,6 +115,12 @@ class GluedSignalViewer(QWidget):
         """Update interpolation method and emit signal when changed."""
         self.interpolation_method = method
         self.interpolation_changed.emit(method)
+
+    def assign_segments(self, segment1, segment2):
+        """Assigns segments to be used for concatenation and plotting."""
+        self.segment1 = segment1
+        self.segment2 = segment2
+        print(f"after {self.segment1, self.segment2}")
 
     def generate_report(self):
         """Generate a beautifully organized PDF report with statistics and snapshots for signal segments."""
