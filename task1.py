@@ -1560,91 +1560,6 @@ class SignalViewer(QWidget):
         filtered_amplitude = filtered_data[:, 1]
         filtered_time = filtered_data[:, 0]
         return filtered_amplitude, filtered_time
-
-# class GlueDialog(QDialog):
-#     """Dialog to input parameters for gluing two signals with enhanced GUI."""
-#
-#     def __init__(self, parent=None):
-#         super().__init__(parent)
-#         self.setWindowTitle("Glue Signals Parameters")
-#         self.resize(350, 250)
-#
-#         # Main layout
-#         main_layout = QVBoxLayout(self)
-#
-#
-#         # Signal 1 group
-#         group_signal1 = QGroupBox("Signal 1 Settings")
-#         layout_signal1 = QFormLayout()
-#         self.start_signal1 = QSpinBox()
-#         self.end_signal1 = QSpinBox()
-#         self.start_signal1.setRange(0, 60001)
-#         self.end_signal1.setRange(0, 60001)
-#         self.start_signal1.setToolTip("Select the start point for Signal 1")
-#         self.end_signal1.setToolTip("Select the end point for Signal 1")
-#         layout_signal1.addRow(QLabel("Start (in sec):"), self.start_signal1)
-#         layout_signal1.addRow(QLabel("End (in sec):"), self.end_signal1)
-#         group_signal1.setLayout(layout_signal1)
-#
-#         # Signal 2 group
-#         group_signal2 = QGroupBox("Signal 2 Settings")
-#         layout_signal2 = QFormLayout()
-#         self.start_signal2 = QSpinBox()
-#         self.end_signal2 = QSpinBox()
-#         self.start_signal2.setRange(0, 60001)
-#         self.end_signal2.setRange(0, 60001)
-#         self.start_signal2.setToolTip("Select the start point for Signal 2")
-#         self.end_signal2.setToolTip("Select the end point for Signal 2")
-#         layout_signal2.addRow(QLabel("Start (in sec):"), self.start_signal2)
-#         layout_signal2.addRow(QLabel("End (in sec):"), self.end_signal2)
-#         group_signal2.setLayout(layout_signal2)
-#
-#         # Interpolation order group
-#         group_interpolation = QGroupBox("Interpolation Settings")
-#         layout_interpolation = QFormLayout()
-#         self.interpolation_slider = QSlider(Qt.Horizontal)
-#         self.interpolation_slider.setRange(1, 3)
-#         self.interpolation_slider.setTickPosition(QSlider.TicksBelow)
-#         self.interpolation_slider.setTickInterval(1)
-#         self.interpolation_slider.setToolTip("Choose interpolation order (1:3)")
-#         layout_interpolation.addRow(QLabel("Interpolation Order (1:3):"), self.interpolation_slider)
-#         group_interpolation.setLayout(layout_interpolation)
-#
-#         # Buttons layout
-#         button_layout = QHBoxLayout()
-#         self.confirm_button = QPushButton("Glue")
-#         self.cancel_button = QPushButton("Cancel")
-#         self.confirm_button.setStyleSheet("background-color: #4CAF50; color: white;")
-#         self.cancel_button.setStyleSheet("background-color: #f44336; color: white;")
-#         button_layout.addWidget(self.confirm_button)
-#         button_layout.addWidget(self.cancel_button)
-#
-#         # Add everything to the main layout
-#         main_layout.addWidget(group_signal1)
-#         main_layout.addWidget(group_signal2)
-#         main_layout.addWidget(group_interpolation)
-#         main_layout.addLayout(button_layout)
-#
-#         # Connect buttons
-#         self.confirm_button.clicked.connect(self.accept)
-#         self.cancel_button.clicked.connect(self.reject)
-#
-#     def get_parameters(self):
-#         """Return the glue parameters as a tuple."""
-#         if self.start_signal1.value()<self.end_signal1.value() and self.start_signal2.value()<self.end_signal2.value():
-#             return (self.start_signal1.value(), self.end_signal1.value(),
-#                     self.start_signal2.value(), self.end_signal2.value(),
-#                     self.interpolation_slider.value())
-#         else:
-#             msg_box = QMessageBox()
-#             msg_box.setWindowTitle("Error!")
-#             msg_box.setText("start time should be less than end time!.")
-#             msg_box.setIcon(QMessageBox.Warning)  # Set the icon
-#             msg_box.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)  # Add buttons
-#
-#             # Show the message box and get the user's response
-#             msg_box.exec_()
-
 class CustomToolbar2(QWidget):
     def __init__(self, parent=None):
         super(CustomToolbar2, self).__init__(parent)
@@ -1884,6 +1799,8 @@ class MainWindow(QMainWindow):
 
         # Connect glue button to open the glue parameters dialog
         self.glue_button.clicked.connect(self.open_glue_dialog)
+        self.glue_button.clicked.connect(self.delete_selected_region)
+
 
         # Connect move signals if needed
         self.viewer1.request_move_signal.connect(
@@ -1929,6 +1846,10 @@ class MainWindow(QMainWindow):
         except:
             self.show_message_box("You Should Upload Signal or Select a region")
 
+
+    def delete_selected_region(self):
+        self.viewer1.selector.clear()
+        self.viewer2.selector.clear()
 
     def update_gap(self, gap):
         self.gap = gap
