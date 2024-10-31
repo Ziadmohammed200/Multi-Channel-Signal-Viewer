@@ -333,7 +333,7 @@ class CustomToolbar(NavigationToolbar):
 
         # Rewind Button
         self.rewind_btn = QToolButton()
-        self.rewind_btn.setIcon(QIcon("D:icons/replay.png"))
+        self.rewind_btn.setIcon(QIcon("C:icons/replay.png"))
         self.rewind_btn.setToolTip("Rewind Animation")
         self.rewind_btn.clicked.connect(self.rewind_animation.emit)
         self.addWidget(self.rewind_btn)
@@ -344,21 +344,21 @@ class CustomToolbar(NavigationToolbar):
 
          # Zoom In Button
         self.zoom_in_btn = QToolButton()
-        self.zoom_in_btn.setIcon(QIcon("D:icons/zoomin2.png"))
+        self.zoom_in_btn.setIcon(QIcon("C:icons/zoomin2.png"))
         self.zoom_in_btn.setToolTip("Zoom In")
         self.zoom_in_btn.clicked.connect(self.zoom_in_signal.emit)
         self.addWidget(self.zoom_in_btn)
 
         # Zoom Out Button
         self.zoom_out_btn = QToolButton()
-        self.zoom_out_btn.setIcon(QIcon("D:icons/zoomout.png"))
+        self.zoom_out_btn.setIcon(QIcon("C:icons/zoomout.png"))
         self.zoom_out_btn.setToolTip("Zoom Out")
         self.zoom_out_btn.clicked.connect(self.zoom_out_signal.emit)
         self.addWidget(self.zoom_out_btn)
 
         # Reset Zoom Button
         self.reset_zoom_btn = QToolButton()
-        self.reset_zoom_btn.setIcon(QIcon("D:icons/ZoomReset.png"))
+        self.reset_zoom_btn.setIcon(QIcon("C:icons/ZoomReset.png"))
         self.reset_zoom_btn.setToolTip("Reset Zoom")
         self.reset_zoom_btn.clicked.connect(self.reset_zoom_signal.emit)
         self.addWidget(self.reset_zoom_btn)
@@ -376,14 +376,14 @@ class CustomToolbar(NavigationToolbar):
 
         # Save Image Button
         self.save_img_btn = QToolButton()
-        self.save_img_btn.setIcon(QIcon("D:icons/save.jpg"))
+        self.save_img_btn.setIcon(QIcon("C:icons/save.jpg"))
         self.save_img_btn.setToolTip("Save Image")
         self.save_img_btn.clicked.connect(self.save_image.emit)
         self.addWidget(self.save_img_btn)
 
         # Save PDF Button
         self.save_pdf_btn = QToolButton()
-        self.save_pdf_btn.setIcon(QIcon("D:icons/pdf3.png"))  # Replace with your icon path
+        self.save_pdf_btn.setIcon(QIcon("C:icons/pdf3.png"))  # Replace with your icon path
         self.save_pdf_btn.setToolTip("Save as PDF")
         self.save_pdf_btn.clicked.connect(self.save_pdf.emit)
         self.addWidget(self.save_pdf_btn)
@@ -505,6 +505,7 @@ class SignalViewer(QWidget):
         slider_layout.addWidget(self.slider)
         plot_layout.addLayout(slider_layout)
         self.slider.sliderMoved.connect(self.slider_moved)
+        self.last_mouse_x_position = None
 
 
 
@@ -1893,36 +1894,40 @@ class MainWindow(QMainWindow):
 
 
     def open_glue_dialog(self):
-        start1, end1 =self.viewer1.selected_segment()
-        start2,end2=self.viewer2.selected_segment()
+        try:
+            start1, end1 =self.viewer1.selected_segment()
+            start2,end2=self.viewer2.selected_segment()
 
-        self.start1 = start1  # start time of the first signal
-        self.end1 = end1  # end time of the first signal
-        self.start2 = start2  # start time of the second signal
-        self.end2 = end2  # end time of the second signal
-        self.kind = 1
+            self.start1 = start1  # start time of the first signal
+            self.end1 = end1  # end time of the first signal
+            self.start2 = start2  # start time of the second signal
+            self.end2 = end2  # end time of the second signal
+            self.kind = 1
 
 
-        signal1_segment, signal1_time = self.viewer1.get_signal_segment(start1, end1 )
-        signal2_segment, signal2_time = self.viewer2.get_signal_segment(start2, end2 )
-        self.segment1 = signal1_segment
-        self.segment2 = signal2_segment
-        self.time1 = signal1_time
-        self.time2 = signal2_time
-        print("67")
-        self.viewer_glued.assign_segments(self.segment1, self.segment2)
+            signal1_segment, signal1_time = self.viewer1.get_signal_segment(start1, end1 )
+            signal2_segment, signal2_time = self.viewer2.get_signal_segment(start2, end2 )
+            self.segment1 = signal1_segment
+            self.segment2 = signal2_segment
+            self.time1 = signal1_time
+            self.time2 = signal2_time
+            print("67")
+            self.viewer_glued.assign_segments(self.segment1, self.segment2)
 
-        print("69")
+            print("69")
 
-        glued_signal = self.concatenate_signals()
-        glued_window = QMainWindow(self)
-        print("vghhg")
-        self.viewer_glued.assign_glued_signal(glued_signal)
-        self.viewer_glued.plot()
-        glued_window.setWindowTitle("Glued Signal Viewer")
-        glued_window.setCentralWidget(self.viewer_glued)
-        glued_window.resize(1000, 600)
-        glued_window.show()
+            glued_signal = self.concatenate_signals()
+            glued_window = QMainWindow(self)
+            print("vghhg")
+            self.viewer_glued.assign_glued_signal(glued_signal)
+            self.viewer_glued.plot()
+            glued_window.setWindowTitle("Glued Signal Viewer")
+            glued_window.setCentralWidget(self.viewer_glued)
+            glued_window.resize(1000, 600)
+            glued_window.show()
+        except:
+            self.show_message_box("You Should Upload Signal or Select a region")
+
 
     def update_gap(self, gap):
         self.gap = gap
@@ -1968,8 +1973,9 @@ class MainWindow(QMainWindow):
 
     def show_message_box(self, message):
         msg = QMessageBox()
-        msg.setIcon(QMessageBox.Information)
-        msg.setWindowTitle('Error!')
+        msg.setIcon(QMessageBox.Warning)
+        msg.setWindowTitle('Error')
+        msg.setWindowIcon(QIcon('C:/Users/DELL/PycharmProjects/Signal-Viewer/icons/W.png'))
         msg.setText(message)
         msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
