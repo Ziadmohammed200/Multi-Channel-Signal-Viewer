@@ -575,6 +575,7 @@ class SignalViewer(QWidget):
         self.set_controls_enabled(False)
         self.slider_is_moving = False
         self.panning = False
+        self.last_mouse_x_position=None
         self.pan_start = None
         self.selected_start = None
         self.selected_end = None
