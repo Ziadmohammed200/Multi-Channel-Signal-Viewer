@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
     QFileDialog, QColorDialog, QMessageBox, QSlider, QLabel, QSizePolicy,
     QGroupBox, QMenu, QLineEdit, QCheckBox, QSpinBox, QMainWindow, QAction,
     QScrollArea, QListWidget, QListWidgetItem, QStyle, QToolButton, QInputDialog,
-    QDialog, QTabWidget, QComboBox,QFormLayout
+    QDialog, QTabWidget, QComboBox, QFormLayout, QFrame
 )
 from PyQt5.QtGui import QIcon, QColor, QCursor
 from PyQt5.QtCore import Qt, QTimer, QSize, pyqtSignal, QObject, QFileInfo
@@ -1560,71 +1560,220 @@ class SignalViewer(QWidget):
         filtered_amplitude = filtered_data[:, 1]
         filtered_time = filtered_data[:, 0]
         return filtered_amplitude, filtered_time
+
+
 class CustomToolbar2(QWidget):
     def __init__(self, parent=None):
         super(CustomToolbar2, self).__init__(parent)
         self.layout = QVBoxLayout()
+
+        # Set dark blue mode style for the toolbar
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #1a1a2e;
+                color: #ffffff;
+                border-radius: 10px;
+            }
+            QPushButton {
+                background-color: #2a2a4e;
+                border: none;
+                padding: 5px 15px;
+                border-radius: 5px;
+                color: #ffffff;
+                min-width: 80px;
+                margin: 2px;
+            }
+            QPushButton:hover {
+                background-color: #3a3a6e;
+            }
+            QPushButton:disabled {
+                background-color: #252538;
+                color: #666666;
+            }
+            QComboBox {
+                background-color: #2a2a4e;
+                border: none;
+                padding: 5px;
+                border-radius: 5px;
+                min-width: 150px;
+            }
+            QComboBox:hover {
+                background-color: #3a3a6e;
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 20px;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 5px solid #ffffff;
+                margin-right: 5px;
+            }
+            QSlider::groove:horizontal {
+                background: #2a2a4e;
+                height: 4px;
+                border-radius: 2px;
+            }
+            QSlider::handle:horizontal {
+                background: #4a4a8e;
+                width: 16px;
+                height: 16px;
+                margin: -6px 0;
+                border-radius: 8px;
+            }
+            QSlider::handle:horizontal:hover {
+                background: #5a5a9e;
+            }
+            QLabel {
+                color: #ffffff;
+                margin: 0 5px;
+            }
+        """)
+
+
+
         buttons_layout = QHBoxLayout()
+        self.upload_button = QPushButton("Upload")
+        buttons_layout.addWidget(self.upload_button)
         self.signal_select = QComboBox()
         buttons_layout.addWidget(self.signal_select)
         self.color_button = QPushButton("Select Color")
         buttons_layout.addWidget(self.color_button)
-        self.start_button = QPushButton("Start")
-        buttons_layout.addWidget(self.start_button)
-        self.stop_button = QPushButton("Stop")
-        buttons_layout.addWidget(self.stop_button)
+        self.play_button = QPushButton("Play")
+        buttons_layout.addWidget(self.play_button)
         self.reset_button = QPushButton("Reset")
         buttons_layout.addWidget(self.reset_button)
-        self.delete_button = QPushButton("Delete")  # Add Delete button
+        self.delete_button = QPushButton("Delete")
         buttons_layout.addWidget(self.delete_button)
+
         self.speed_slider = QSlider(Qt.Horizontal)
         self.speed_slider.setMinimum(1)
         self.speed_slider.setMaximum(100)
         self.speed_slider.setValue(1)
-        buttons_layout.addWidget(QLabel("Movement Speed"))
+        speed_label = QLabel("Movement Speed")
+        buttons_layout.addWidget(speed_label)
         buttons_layout.addWidget(self.speed_slider)
+
         self.layout.addLayout(buttons_layout)
         self.setLayout(self.layout)
+
+        # Additional spacing and margins for better appearance
+        self.layout.setContentsMargins(10, 10, 10, 10)
+        self.layout.setSpacing(10)
+
         # Disable buttons initially until a signal is uploaded
-        self.start_button.setEnabled(False)
-        self.stop_button.setEnabled(False)
+        self.play_button.setEnabled(False)
         self.color_button.setEnabled(False)
         self.reset_button.setEnabled(False)
-        self.delete_button.setEnabled(False)  # Disable delete button initially
-
+        self.delete_button.setEnabled(False)
 
 
 class RadarViewer(QWidget):
     def __init__(self, parent=None):
         super(RadarViewer, self).__init__(parent)
         main_layout = QVBoxLayout()
-        self.figure, self.ax = plt.subplots(subplot_kw={'projection': 'polar'}, figsize=(8, 8))  # Increase the figure size
+
+        # Set up dark mode style
+        plt.style.use('dark_background')
+        self.figure, self.ax = plt.subplots(subplot_kw={'projection': 'polar'}, figsize=(8, 8))
+
+        # Customize plot appearance for dark mode with blue background
+        self.figure.patch.set_facecolor('#1a1a2e')  # Dark blue background for the figure
+        self.ax.set_facecolor('#1a1a2e')  # Dark blue background for the plot area
+
+        # Customize grid and axis lines
+        self.ax.grid(color='#2a2a4e', linestyle='--', alpha=0.7)
+        self.ax.spines['polar'].set_color('#2a2a4e')
+
+        # Set up the range and angle lines
+        self.ax.set_rmax(20)
+
+        # Remove default angle labels
+        self.ax.set_xticklabels([])
+
+        # Add custom angle labels
+        angles_deg = np.arange(0, 360, 45)
+        angles_rad = np.deg2rad(angles_deg)
+
+        # Position labels slightly outside the outermost grid line
+        radius = 20 * 1.1  # 10% outside the maximum radius
+
+        for angle_deg, angle_rad in zip(angles_deg, angles_rad):
+            x = radius * np.cos(angle_rad)
+            y = radius * np.sin(angle_rad)
+            # Use transform to handle the coordinate conversion
+            self.ax.text(angle_rad, radius, f'{angle_deg}°',
+                         ha='center', va='center',
+                         color='#8888aa',
+                         fontsize=10)
+
+        # Customize radial ticks
+        self.ax.tick_params(axis='y', colors='#8888aa', labelsize=8)
+
         self.canvas = FigureCanvas(self.figure)
-        # Add a horizontal layout for the upload button at the top right
-        top_layout = QHBoxLayout()
-        self.upload_button = QPushButton("Upload")
-        top_layout.addWidget(self.upload_button, alignment=Qt.AlignRight)
-        main_layout.addLayout(top_layout)
-        main_layout.addWidget(self.canvas)
+
+        # Set blue background for the widget
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #0a0a1e;
+            }
+            QVBoxLayout {
+                margin: 0;
+                padding: 0;
+            }
+        """)
+
+        # Create a frame for the canvas with a blue background
+        canvas_frame = QFrame()
+        canvas_frame.setStyleSheet("""
+            QFrame {
+                background-color: #1a1a2e;
+                border-radius: 10px;
+                padding: 10px;
+            }
+        """)
+        canvas_layout = QVBoxLayout()
+        canvas_layout.addWidget(self.canvas)
+        canvas_frame.setLayout(canvas_layout)
+
+        main_layout.addWidget(canvas_frame)
         self.toolbar = CustomToolbar2(self)
         main_layout.addWidget(self.toolbar)
+
+        # Add some margins around the main layout
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(10)
+
         self.setLayout(main_layout)
+
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_signal)
-        self.signal_data_list = []  # List to hold multiple signals
-        self.current_indices = []  # List to hold current index for each signal
-        self.signal_colors = ['#FF0000', '#00FF00', '#0000FF', '#ffaa00', '#ff55ff', '#55007f', '#FF0000', '#00FF00','#0000FF', '#ffaa00', '#ff55ff', '#55007f']  # Default colors for signals
-        self.selected_index = -1  # To keep track of the selected signal index
-        self.movement_speed = 0.001  # Initialize movement speed
-        self.upload_button.clicked.connect(self.upload_signal)
-        self.toolbar.start_button.clicked.connect(self.start_signal)
-        self.toolbar.stop_button.clicked.connect(self.stop_signal)
-        self.toolbar.color_button.clicked.connect(self.select_color)  # Connect color button
-        self.toolbar.reset_button.clicked.connect(self.reset_movement)  # Connect reset button
-        self.toolbar.delete_button.clicked.connect(self.delete_signal)  # Connect delete button
+        self.signal_data_list = []
+        self.current_indices = []
+        # Updated colors for better visibility on blue background
+        self.signal_colors = ['#ff4444', '#44ff44', '#4444ff', '#ffaa44', '#ff44ff', '#44ffff',
+                              '#ff8888', '#88ff88', '#8888ff', '#ffcc88', '#ff88ff', '#88ffff']
+        self.selected_index = -1
+        self.movement_speed = 0.001
+        self.is_playing = False
+
+        # Connect buttons
+        self.toolbar.upload_button.clicked.connect(self.upload_signal)
+        self.toolbar.play_button.clicked.connect(self.toggle_play_pause)
+        self.toolbar.color_button.clicked.connect(self.select_color)
+        self.toolbar.reset_button.clicked.connect(self.reset_movement)
+        self.toolbar.delete_button.clicked.connect(self.delete_signal)
         self.toolbar.speed_slider.valueChanged.connect(self.update_speed)
         self.toolbar.signal_select.addItems([])
         self.toolbar.signal_select.currentIndexChanged.connect(self.update_selected_signal)
+
+    def update_toolbar_style(self):
+        # Example method to set toolbar colors
+        self.toolbar.setStyleSheet("background-color: #2E2E2E; color: white;")  # Darker background for the toolbar
+        for button in self.toolbar.findChildren(QPushButton):
+            button.setStyleSheet("background-color: #4E4E4E; color: white;")  # Button colors
 
     def upload_signal(self):
         options = QFileDialog.Options()
@@ -1665,21 +1814,59 @@ class RadarViewer(QWidget):
         if self.selected_index >= 0:
             self.timer.stop()
 
+    def toggle_play_pause(self):
+        """Toggle between play and pause states"""
+        if self.selected_index >= 0:
+            if self.is_playing:
+                self.timer.stop()
+                self.toolbar.play_button.setText("Play")
+            else:
+                self.timer.start(100)
+                self.toolbar.play_button.setText("Pause")
+            self.is_playing = not self.is_playing
+
     def update_signal(self):
-        self.ax.clear()
+        self.ax.clear()  # Clear previous plot
+        self.ax.set_facecolor('#1E1E1E')  # Set axes background color to dark
+
+        # Iterate through signal data
         for idx, (time_data, voltage_data) in enumerate(self.signal_data_list):
             current_index = self.current_indices[idx]
+
+            # Ensure current index is within the time_data range
             if current_index < len(time_data):
+                # Calculate the angle in radians for polar coordinates
                 theta = (time_data[current_index] - time_data[0]) / (time_data[-1] - time_data[0]) * 2 * np.pi
-                self.ax.plot(theta, voltage_data[current_index], 'o', color=self.signal_colors[idx], label=f'Signal {idx + 1}')
+
+                # Plot the current data point
+                self.ax.plot(theta, voltage_data[current_index], 'o', color=self.signal_colors[idx],
+                             label=f'Signal {idx + 1}')
+
+                # If there are previous points, plot the line connecting them
                 if current_index > 0:
-                    self.ax.plot(np.linspace(0, 2 * np.pi, current_index + 1), voltage_data[:current_index + 1], color=self.signal_colors[idx])
+                    self.ax.plot(np.linspace(0, 2 * np.pi, current_index + 1), voltage_data[:current_index + 1],
+                                 color=self.signal_colors[idx])
+
+                # Increment the current index for the next update
                 self.current_indices[idx] += 1
             else:
-                self.current_indices[idx] = len(voltage_data)
-        self.ax.set_title("Signals Viewer in Polar Coordinates")
+                self.current_indices[idx] = len(voltage_data)  # Reset to the end of voltage data
+
+        # Set title and its color
+        self.ax.set_title("Signals Viewer in Polar Coordinates", color='white')  # Title color to white
+
+        # Set limits for the y-axis, ensuring all signals are visible
         self.ax.set_ylim([np.min([v[1] for v in self.signal_data_list]), np.max([v[1] for v in self.signal_data_list])])
-        self.ax.legend()
+
+        # Set tick colors to white
+        self.ax.tick_params(colors='white')  # Set tick mark colors to white
+
+        # Set legend properties
+        legend = self.ax.legend()
+        for text in legend.get_texts():
+            text.set_color('white')  # Set legend text color to white
+
+        # Draw the updated canvas
         self.canvas.draw()
 
     def select_color(self):
@@ -1715,14 +1902,12 @@ class RadarViewer(QWidget):
 
     def update_buttons(self):
         if self.selected_index >= 0 and self.selected_index < len(self.signal_data_list):
-            self.toolbar.start_button.setEnabled(True)
-            self.toolbar.stop_button.setEnabled(True)
+            self.toolbar.play_button.setEnabled(True)
             self.toolbar.color_button.setEnabled(True)
             self.toolbar.reset_button.setEnabled(True)  # Ensure reset button is enabled
             self.toolbar.delete_button.setEnabled(True)  # Ensure delete button is enabled
         else:
-            self.toolbar.start_button.setEnabled(False)
-            self.toolbar.stop_button.setEnabled(False)
+            self.toolbar.play_button.setEnabled(False)
             self.toolbar.color_button.setEnabled(False)
             self.toolbar.reset_button.setEnabled(False)  # Ensure reset button is disabled
             self.toolbar.delete_button.setEnabled(False)  # Ensure delete button is disabled
