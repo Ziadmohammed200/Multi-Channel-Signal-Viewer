@@ -105,32 +105,97 @@ class BackendVSTab(QWidget):
         self.initUI()
 
     def initUI(self):
+        # Main layout
         layout = QVBoxLayout()
+        layout.setSpacing(10)  # Add spacing between widgets
+        layout.setContentsMargins(15, 15, 15, 15)  # Add margins around the edges
         self.setLayout(layout)
 
-        # Start button
-        self.start_button = QPushButton("Start Backend VS Code")
-        self.start_button.clicked.connect(self.run_backend_vs_code)
-        layout.addWidget(self.start_button)
+        # Create a title label with styled text
+        title_label = QLabel("Audio Visualization")
+        title_label.setStyleSheet("""
+            QLabel {
+                font-size: 18px;
+                font-weight: bold;
+                color: #2c3e50;
+                padding: 5px;
+            }
+        """)
+        layout.addWidget(title_label, alignment=Qt.AlignCenter)
 
-        # Stop button
-        self.stop_button = QPushButton("Stop Backend VS Code")
-        self.stop_button.clicked.connect(self.stop_backend_vs_code)
-        self.stop_button.setEnabled(False)  # Initially disabled
-        layout.addWidget(self.stop_button)
-
-        # Status label
-        self.status_label = QLabel("Status: Stopped")
-        layout.addWidget(self.status_label)
-
+        # Plot container (at the top)
+        plot_container = QWidget()
+        plot_container.setStyleSheet("""
+            QWidget {
+                background-color: white;
+                border: 2px solid #bdc3c7;
+                border-radius: 5px;
+            }
+        """)
+        plot_layout = QVBoxLayout(plot_container)
+        
         # Matplotlib figure and canvas
-        self.fig, self.ax = plt.subplots()
+        self.fig, self.ax = plt.subplots(facecolor='white')
+        self.fig.set_size_inches(8, 4)  # Set a better default size
         self.canvas = FigureCanvas(self.fig)
-        layout.addWidget(self.canvas)
+        plot_layout.addWidget(self.canvas)
+        
+        # Style the plot
+        self.ax.set_facecolor('#000000')  # Light gray background
+        self.ax.grid(True, linestyle='--', alpha=0.7)
+        self.ax.set_xlabel("Time (ms)", fontsize=10, color='#2c3e50')
+        self.ax.set_ylabel("Amplitude", fontsize=10, color='#2c3e50')
+        self.ax.tick_params(colors='#2c3e50')
+        
+        layout.addWidget(plot_container)
 
-        # Set axis labels
-        self.ax.set_xlabel("Time (ms)")
-        self.ax.set_ylabel("Amplitude")
+        # Controls container (at the bottom)
+        controls_container = QWidget()
+        controls_container.setStyleSheet("""
+            QWidget {
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 5px;
+                padding: 10px;
+            }
+        """)
+        controls_layout = QVBoxLayout(controls_container)
+        controls_layout.setSpacing(10)
+
+        # Status label with improved styling
+        self.status_label = QLabel("Status: Stopped")
+        self.status_label.setStyleSheet("""
+            QLabel {
+                font-size: 12px;
+                color: #2c3e50;
+                padding: 5px;
+            }
+        """)
+        controls_layout.addWidget(self.status_label, alignment=Qt.AlignCenter)
+
+        # Play/Stop button with improved styling
+        self.play_stop_button = QPushButton("Play") # start backend vs code 
+        self.play_stop_button.setStyleSheet("""
+            QPushButton {
+                background-color: #2ecc71;
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 5px;
+                font-weight: bold;
+                min-width: 200px;
+            }
+            QPushButton:hover {
+                background-color: #27ae60;
+            }
+            QPushButton:pressed {
+                background-color: #219a52;
+            }
+        """)
+        self.play_stop_button.clicked.connect(self.toggle_backend_vs_code)
+        controls_layout.addWidget(self.play_stop_button, alignment=Qt.AlignCenter)
+
+        layout.addWidget(controls_container)
 
         # Timer for updating the plot
         self.timer = QTimer()
@@ -140,12 +205,12 @@ class BackendVSTab(QWidget):
         self.audio_process = None
         self.buffer_size = 1024
         self.buffer = np.zeros(self.buffer_size)
-        self.line, = self.ax.plot(np.arange(self.buffer_size), self.buffer)
+        self.line, = self.ax.plot(np.arange(self.buffer_size), self.buffer, color='#3498db', linewidth=1)
         self.ax.set_ylim(-1, 1)
 
         # Time index and extended buffer for panning
         self.time_index = 0
-        self.full_buffer = np.array([])  # Extended buffer for storing all data
+        self.full_buffer = np.array([])
 
         # Initialize panning attributes
         self.panning = False
@@ -157,13 +222,47 @@ class BackendVSTab(QWidget):
         self.canvas.mpl_connect('button_release_event', self.on_mouse_release)
         self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
 
+    def toggle_backend_vs_code(self):
+        if self.audio_process:
+            self.stop_backend_vs_code()
+            self.play_stop_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #2ecc71;
+                    color: white;
+                    border: none;
+                    padding: 10px;
+                    border-radius: 5px;
+                    font-weight: bold;
+                    min-width: 200px;
+                }
+                QPushButton:hover {
+                    background-color: #27ae60;
+                }
+            """)
+        else:
+            self.run_backend_vs_code()
+            self.play_stop_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #e74c3c;
+                    color: white;
+                    border: none;
+                    padding: 10px;
+                    border-radius: 5px;
+                    font-weight: bold;
+                    min-width: 200px;
+                }
+                QPushButton:hover {
+                    background-color: #c0392b;
+                }
+            """)
+
+
     def run_backend_vs_code(self):
         url = "https://s44.myradiostream.com/9204/listen.mp3"
         self.audio_process = stream_audio(url)
         self.timer.start(10)
         self.status_label.setText("Status: Running")
-        self.start_button.setEnabled(False)  # Disable start button while running
-        self.stop_button.setEnabled(True)  # Enable stop button
+        self.play_stop_button.setText("Stop")
 
     def stop_backend_vs_code(self):
         if self.audio_process:
@@ -172,8 +271,7 @@ class BackendVSTab(QWidget):
             self.audio_process = None
         self.timer.stop()
         self.status_label.setText("Status: Stopped")
-        self.start_button.setEnabled(True)  # Enable start button again
-        self.stop_button.setEnabled(False)  # Disable stop button
+        self.play_stop_button.setText("Play")
 
         # After stopping, allow panning and zooming
         self.ax.set_xlim(0, self.time_index)  # Set x-limits to full signal duration
@@ -1958,7 +2056,7 @@ class MainWindow(QMainWindow):
 
         # Create Backend VS Code tab
         self.backend_vs_tab = BackendVSTab()
-        self.tab_widget.addTab(self.backend_vs_tab, "Backend VS Code")
+        self.tab_widget.addTab(self.backend_vs_tab, "Signal Broadcasting")
 
 
         # Create the Radar Signal tab
