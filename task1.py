@@ -1921,7 +1921,10 @@ class RadarViewer(QWidget):
             self.update_buttons()
             #self.toolbar.reset_button.setEnabled(True)  # Enable reset button
             #self.toolbar.start_button.setEnabled(True)
-            self.start_signal()
+            if len(self.signal_data_list) == 1:
+                self.start_signal()
+                self.is_playing = not self.is_playing
+
 
         except Exception as e:
             print(f"Error loading signal data: {e}")
@@ -1938,6 +1941,7 @@ class RadarViewer(QWidget):
         if self.selected_index >= 0:
             print(f"Start signal 1 {self.selected_index}")
             self.timer.start(100)
+            self.toolbar.play_button.setText("Pause")
 
     def stop_signal(self):
         if self.selected_index >= 0:
