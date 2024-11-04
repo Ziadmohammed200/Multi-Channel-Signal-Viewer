@@ -1755,17 +1755,31 @@ class RadarViewer(QWidget):
         super(RadarViewer, self).__init__(parent)
         main_layout = QVBoxLayout()
 
-        # Set up dark mode style
-        plt.style.use('dark_background')
+
+         # Set up light mode style
+        plt.style.use('default')
         self.figure, self.ax = plt.subplots(subplot_kw={'projection': 'polar'}, figsize=(8, 8))
 
-        # Customize plot appearance for dark mode with blue background
-        self.figure.patch.set_facecolor('#1a1a2e')  # Dark blue background for the figure
-        self.ax.set_facecolor('#1a1a2e')  # Dark blue background for the plot area
+        # Set a light background for the figure and plot area
+        self.figure.patch.set_facecolor('white')
+        self.ax.set_facecolor('white')
 
-        # Customize grid and axis lines
-        self.ax.grid(color='#2a2a4e', linestyle='--', alpha=0.7)
-        self.ax.spines['polar'].set_color('#2a2a4e')
+        # Customize grid and axis lines for light mode
+        self.ax.grid(color='#cccccc', linestyle='--', alpha=0.7)
+        self.ax.spines['polar'].set_color('#cccccc')
+
+
+        # # Set up dark mode style
+        # plt.style.use('dark_background')
+        # self.figure, self.ax = plt.subplots(subplot_kw={'projection': 'polar'}, figsize=(8, 8))
+        #
+        # # Customize plot appearance for dark mode with blue background
+        # self.figure.patch.set_facecolor('#1a1a2e')  # Dark blue background for the figure
+        # self.ax.set_facecolor('#1a1a2e')  # Dark blue background for the plot area
+        #
+        # # Customize grid and axis lines
+        # self.ax.grid(color='#2a2a4e', linestyle='--', alpha=0.7)
+        # self.ax.spines['polar'].set_color('#2a2a4e')
 
         # Set up the range and angle lines
         self.ax.set_rmax(20)
@@ -1780,24 +1794,31 @@ class RadarViewer(QWidget):
         # Position labels slightly outside the outermost grid line
         radius = 20 * 1.1  # 10% outside the maximum radius
 
+        # for angle_deg, angle_rad in zip(angles_deg, angles_rad):
+        #     x = radius * np.cos(angle_rad)
+        #     y = radius * np.sin(angle_rad)
+        #     # Use transform to handle the coordinate conversion
+        #     self.ax.text(angle_rad, radius, f'{angle_deg}°',
+        #                  ha='center', va='center',
+        #                  color='#8888aa',
+        #                  fontsize=10)
+        #
+        # # Customize radial ticks
+        # self.ax.tick_params(axis='y', colors='#8888aa', labelsize=8)
+
         for angle_deg, angle_rad in zip(angles_deg, angles_rad):
-            x = radius * np.cos(angle_rad)
-            y = radius * np.sin(angle_rad)
-            # Use transform to handle the coordinate conversion
             self.ax.text(angle_rad, radius, f'{angle_deg}°',
                          ha='center', va='center',
-                         color='#8888aa',
-                         fontsize=10)
+                         color='#333333', fontsize=10)
 
-        # Customize radial ticks
-        self.ax.tick_params(axis='y', colors='#8888aa', labelsize=8)
+        # Customize radial ticks for better contrast
+        self.ax.tick_params(axis='y', colors='#333333', labelsize=8)
 
         self.canvas = FigureCanvas(self.figure)
 
-        # Set blue background for the widget
         self.setStyleSheet("""
             QWidget {
-                background-color: #0a0a1e;
+                background-color: #f8f8f8;
             }
             QVBoxLayout {
                 margin: 0;
@@ -1805,15 +1826,36 @@ class RadarViewer(QWidget):
             }
         """)
 
-        # Create a frame for the canvas with a blue background
+        # # Set blue background for the widget
+        # self.setStyleSheet("""
+        #     QWidget {
+        #         background-color: #0a0a1e;
+        #     }
+        #     QVBoxLayout {
+        #         margin: 0;
+        #         padding: 0;
+        #     }
+        # """)
+        # Create a frame for the canvas with a light border
         canvas_frame = QFrame()
         canvas_frame.setStyleSheet("""
             QFrame {
-                background-color: #1a1a2e;
+                background-color: #ffffff;
+                border: 1px solid #dddddd;
                 border-radius: 10px;
                 padding: 10px;
             }
         """)
+
+        # # Create a frame for the canvas with a blue background
+        # canvas_frame = QFrame()
+        # canvas_frame.setStyleSheet("""
+        #     QFrame {
+        #         background-color: #1a1a2e;
+        #         border-radius: 10px;
+        #         padding: 10px;
+        #     }
+        # """)
         canvas_layout = QVBoxLayout()
         canvas_layout.addWidget(self.canvas)
         canvas_frame.setLayout(canvas_layout)
@@ -1849,11 +1891,16 @@ class RadarViewer(QWidget):
         self.toolbar.signal_select.addItems([])
         self.toolbar.signal_select.currentIndexChanged.connect(self.update_selected_signal)
 
+    # def update_toolbar_style(self):
+    #     # Example method to set toolbar colors
+    #     self.toolbar.setStyleSheet("background-color: #2E2E2E; color: white;")  # Darker background for the toolbar
+    #     for button in self.toolbar.findChildren(QPushButton):
+    #         button.setStyleSheet("background-color: #4E4E4E; color: white;")  # Button colors
     def update_toolbar_style(self):
-        # Example method to set toolbar colors
-        self.toolbar.setStyleSheet("background-color: #2E2E2E; color: white;")  # Darker background for the toolbar
+        # Example method to set toolbar colors for light mode
+        self.toolbar.setStyleSheet("background-color: #f0f0f0; color: black;")
         for button in self.toolbar.findChildren(QPushButton):
-            button.setStyleSheet("background-color: #4E4E4E; color: white;")  # Button colors
+            button.setStyleSheet("background-color: #e0e0e0; color: black;")  # Button colors
 
     def upload_signal(self):
         options = QFileDialog.Options()
@@ -1872,13 +1919,10 @@ class RadarViewer(QWidget):
             self.toolbar.signal_select.addItem(signal_name)
             self.toolbar.signal_select.setCurrentIndex(len(self.signal_data_list) - 1)  # Update to newly added signal
             self.update_buttons()
-            self.toolbar.reset_button.setEnabled(True)  # Enable reset button
-            self.toolbar.start_button.setEnabled(True)  # Enable start button
-            # if len(self.signal_data_list) == 1 and not self.is_playing:
-            #     self.selected_index=0
-            #     self.start_signal()  # Start playback automatically
-            # self.timer.start(100)
-            # self.toolbar.play_button.setText("Pause")
+            #self.toolbar.reset_button.setEnabled(True)  # Enable reset button
+            #self.toolbar.start_button.setEnabled(True)
+            self.start_signal()
+
         except Exception as e:
             print(f"Error loading signal data: {e}")
 
@@ -1892,6 +1936,7 @@ class RadarViewer(QWidget):
 
     def start_signal(self):
         if self.selected_index >= 0:
+            print(f"Start signal 1 {self.selected_index}")
             self.timer.start(100)
 
     def stop_signal(self):
@@ -1905,13 +1950,15 @@ class RadarViewer(QWidget):
                 self.timer.stop()
                 self.toolbar.play_button.setText("Play")
             else:
+                print(f"Start signal 2 {self.selected_index}")
                 self.timer.start(100)
                 self.toolbar.play_button.setText("Pause")
             self.is_playing = not self.is_playing
 
     def update_signal(self):
         self.ax.clear()  # Clear previous plot
-        self.ax.set_facecolor('#1E1E1E')  # Set axes background color to dark
+        # self.ax.set_facecolor('#1E1E1E')  # Set axes background color to dark
+        self.ax.set_facecolor('white')
 
         # Iterate through signal data
         for idx, (time_data, voltage_data) in enumerate(self.signal_data_list):
@@ -1937,18 +1984,18 @@ class RadarViewer(QWidget):
                 self.current_indices[idx] = len(voltage_data)  # Reset to the end of voltage data
 
         # Set title and its color
-        self.ax.set_title("Signals Viewer in Polar Coordinates", color='white')  # Title color to white
+        self.ax.set_title("Signals Viewer in Polar Coordinates", color='black')  # Title color to white
 
         # Set limits for the y-axis, ensuring all signals are visible
         self.ax.set_ylim([np.min([v[1] for v in self.signal_data_list]), np.max([v[1] for v in self.signal_data_list])])
 
         # Set tick colors to white
-        self.ax.tick_params(colors='white')  # Set tick mark colors to white
+        self.ax.tick_params(colors='black')  # Set tick mark colors to white
 
         # Set legend properties
         legend = self.ax.legend()
         for text in legend.get_texts():
-            text.set_color('white')  # Set legend text color to white
+            text.set_color('black')  # Set legend text color to white
 
         # Draw the updated canvas
         self.canvas.draw()
