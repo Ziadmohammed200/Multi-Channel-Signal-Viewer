@@ -622,10 +622,10 @@ class SignalViewer(QWidget):
         speed_label = QLabel("Playback Speed:")
         self.speed_slider = QSlider(Qt.Horizontal)
         self.speed_slider.setMinimum(1)
-        self.speed_slider.setMaximum(200)
-        self.speed_slider.setValue(100)  # Default speed
+        self.speed_slider.setMaximum(100)
+        self.speed_slider.setValue(50)  # Default speed
         self.speed_slider.setTickPosition(QSlider.TicksBelow)
-        self.speed_slider.setTickInterval(20)
+        self.speed_slider.setTickInterval(10)
         self.speed_slider.valueChanged.connect(self.change_speed)
         speed_layout.addWidget(speed_label)
         speed_layout.addWidget(self.speed_slider)
@@ -667,9 +667,9 @@ class SignalViewer(QWidget):
         self.color_palette = self.generate_color_palette()
         self.is_paused = False
         self.isLinked = False
-        self.window_size = 5
+        self.window_size = 3
         self.timer = QTimer()
-        self.timer.setInterval(20)
+        self.timer.setInterval(50)
         self.timer.timeout.connect(self.update_plot)
         self.set_controls_enabled(False)
         self.slider_is_moving = False
@@ -702,12 +702,7 @@ class SignalViewer(QWidget):
     def selected_segment(self):
         return np.round(self.selected_start,2), np.round(self.selected_end,2)
 
-    # def get_selected_segment(self):
-    #     # Assuming signal_data and time_data represent the full signal and time
-    #     mask = (self.time_data >= self.selected_start) & (self.time_data <= self.selected_end)
-    #     selected_segment = self.signal_data[mask]
-    #     selected_time = self.time_data[mask]
-    #     return selected_segment, selected_time
+
     def set_controls_enabled(self, enabled: bool):
         """Enable or disable the signal control buttons based on whether a signal is selected."""
         self.color_btn.setEnabled(enabled)
@@ -908,11 +903,11 @@ class SignalViewer(QWidget):
         self.ax.set_title(new_title, color='white')
         self.canvas.draw()
 
-    def adjust_timer(self):
-        """Adjust the timer interval based on the speed slider."""
-        speed = self.speed_slider.value()
-        interval = max(1, 100 - speed)  # Map slider value to interval, at least 1 ms
-        self.timer.setInterval(interval)
+    # def adjust_timer(self):
+    #     """Adjust the timer interval based on the speed slider."""
+    #     speed = self.speed_slider.value()
+    #     interval = max(1, 100 - speed)  # Map slider value to interval, at least 1 ms
+    #     self.timer.setInterval(interval)
 
 
     def upload_signal(self):
@@ -1079,6 +1074,7 @@ class SignalViewer(QWidget):
                 # Resume the linked viewer as well
                 self.linker.is_paused = False
                 self.linker.timer.start()
+                self.linker.toolbar.toggle_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
         else:
             # Pause the animation
             self.is_paused = True
@@ -1089,26 +1085,9 @@ class SignalViewer(QWidget):
                 # Pause the linked viewer as well
                 self.linker.is_paused = True
                 self.linker.timer.stop()
+                self.linker.toolbar.toggle_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
 
-    # def pause_animation(self):
-    #     """Pause the animation."""
-    #     if self.signals:
-    #         self.is_paused = True
-    #         self.timer.stop()
-    #         if self.isLinked and self.linker:
-    #             # Pause the linked viewer as well
-    #             self.linker.is_paused = True
-    #             self.linker.timer.stop()
-    #
-    #
-    # def play_animation(self):
-    #     """Play or resume the animation."""
-    #     if self.signals and self.is_paused:
-    #         self.is_paused = False
-    #         self.timer.start()
-    #     if self.isLinked and self.linker:
-    #         self.linker.is_paused = False
-    #         self.linker.timer.start()
+
 
     def rewind_animation(self):
         """Rewind the animation to the beginning."""
@@ -1188,9 +1167,10 @@ class SignalViewer(QWidget):
         # Adjust timer interval based on speed slider value
         # Higher speed -> smaller interval
         speed = max(1, value)
-        self.timer.setInterval(int(1000 / speed))  # Example: speed 50 -> interval 20 ms
+        interval = int(100 - speed)
+        self.timer.setInterval(interval)
         if self.linker and self.isLinked:
-            self.linker.timer.setInterval(int(1000 / speed))
+            self.linker.timer.setInterval(interval)
 
     def save_plot_pdf(self):
         """Save the current plot and statistics as a PDF report."""
@@ -1666,37 +1646,38 @@ class CustomToolbar2(QWidget):
         self.layout = QVBoxLayout()
 
         # Set dark blue mode style for the toolbar
+        # Set modern gray and white style for the toolbar
         self.setStyleSheet("""
             QWidget {
-                background-color: #1a1a2e;
-                color: #ffffff;
+                background-color: #f7f7f7;
+                color: #333333;
                 border-radius: 10px;
             }
             QPushButton {
-                background-color: #2a2a4e;
+                background-color: #e0e0e0;
                 border: none;
                 padding: 5px 15px;
                 border-radius: 5px;
-                color: #ffffff;
+                color: #333333;
                 min-width: 80px;
                 margin: 2px;
             }
             QPushButton:hover {
-                background-color: #3a3a6e;
+                background-color: #d0d0d0;
             }
             QPushButton:disabled {
-                background-color: #252538;
-                color: #666666;
+                background-color: #c0c0c0;
+                color: #888888;
             }
             QComboBox {
-                background-color: #2a2a4e;
-                border: none;
+                background-color: #ffffff;
+                border: 1px solid #cccccc;
                 padding: 5px;
                 border-radius: 5px;
                 min-width: 150px;
             }
             QComboBox:hover {
-                background-color: #3a3a6e;
+                background-color: #f0f0f0;
             }
             QComboBox::drop-down {
                 border: none;
@@ -1706,29 +1687,30 @@ class CustomToolbar2(QWidget):
                 image: none;
                 border-left: 5px solid transparent;
                 border-right: 5px solid transparent;
-                border-top: 5px solid #ffffff;
+                border-top: 5px solid #333333;
                 margin-right: 5px;
             }
             QSlider::groove:horizontal {
-                background: #2a2a4e;
+                background: #e0e0e0;
                 height: 4px;
                 border-radius: 2px;
             }
             QSlider::handle:horizontal {
-                background: #4a4a8e;
+                background: #b0b0b0;
                 width: 16px;
                 height: 16px;
                 margin: -6px 0;
                 border-radius: 8px;
             }
             QSlider::handle:horizontal:hover {
-                background: #5a5a9e;
+                background: #909090;
             }
             QLabel {
-                color: #ffffff;
+                color: #333333;
                 margin: 0 5px;
             }
         """)
+
 
 
 
@@ -1892,7 +1874,11 @@ class RadarViewer(QWidget):
             self.update_buttons()
             self.toolbar.reset_button.setEnabled(True)  # Enable reset button
             self.toolbar.start_button.setEnabled(True)  # Enable start button
-            self.start_signal()
+            # if len(self.signal_data_list) == 1 and not self.is_playing:
+            #     self.selected_index=0
+            #     self.start_signal()  # Start playback automatically
+            # self.timer.start(100)
+            # self.toolbar.play_button.setText("Pause")
         except Exception as e:
             print(f"Error loading signal data: {e}")
 
