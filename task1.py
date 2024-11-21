@@ -523,7 +523,7 @@ class SignalViewer(QWidget):
         self.upload_btn = QPushButton()
         self.upload_btn.setIcon(QIcon("icons/file-upload-icon.webp"))  # Replace with your icon path
         self.upload_btn.setToolTip("Upload Signal")
-        self.upload_btn.setText(" Upload")
+        self.upload_btn.setText(" Browse")
         self.upload_btn.setMinimumSize(80, 40)
         self.upload_btn.setMaximumSize(300, 60)
         self.upload_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -548,6 +548,7 @@ class SignalViewer(QWidget):
 
         # Left side: Plot and toolbar
         plot_layout = QVBoxLayout()
+        plot_layout.setContentsMargins(0, 0, 0, 0)
         plot_controls_layout.addLayout(plot_layout, stretch=3)
 
         #  Figure and Canvas
@@ -560,7 +561,7 @@ class SignalViewer(QWidget):
         self.ax.tick_params(axis='x', colors='white')
         self.ax.tick_params(axis='y', colors='white')
         self.ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='gray')
-        self.fig.subplots_adjust(bottom=0.2)
+        self.fig.subplots_adjust(left=0.062, right=0.99, bottom=0.21)
 
 
         #  plot line
