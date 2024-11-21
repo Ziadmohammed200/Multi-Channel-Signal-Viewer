@@ -70,6 +70,11 @@ class GluedSignalViewer(QWidget):
         self.group.setLayout(self.form)
         vertical_layout.addWidget(self.group)
 
+        # "Take Snapshot" button
+        self.take_snapshot_button = QPushButton("Take Snapshot")
+        self.take_snapshot_button.clicked.connect(self.take_snapshot)
+        vertical_layout.addWidget(self.take_snapshot_button)
+
         # "Generate Report" button
         self.report_button = QPushButton("Generate Report")
         self.report_button.clicked.connect(self.generate_report)
@@ -79,6 +84,7 @@ class GluedSignalViewer(QWidget):
 
         self.glued_signal = []
         self.interpolation_method = "Linear"  # Default interpolation method
+        self.snapshots = []  # List to store snapshots and their metadata
 
     def assign_glued_signal(self, glued_signal):
         self.glued_signal = glued_signal
@@ -122,91 +128,6 @@ class GluedSignalViewer(QWidget):
         self.segment2 = segment2
         print(f"after {self.segment1, self.segment2}")
 
-    def generate_report(self):
-        """Generate a beautifully organized PDF report with statistics and snapshots for signal segments."""
-        try:
-            snapshots = []
-
-            # Capture snapshots
-            snapshots.append(self.save_signal_plot(self.segment1, "segment1_snapshot.png", "Segment 1"))
-            snapshots.append(self.save_signal_plot(self.segment2, "segment2_snapshot.png", "Segment 2"))
-
-            # Snapshot of combined segment1 and segment2 before gluing
-            combined_segments = np.concatenate((self.segment1, self.segment2))
-            snapshots.append(self.save_signal_plot(combined_segments, "signal_before_gap_snapshot.png", "Signal Before Updating Gap"))
-
-            # Snapshot of the glued signal
-            snapshots.append(self.save_signal_plot(self.glued_signal, "glued_signal_snapshot.png", "Glued Signal"))
-
-            # Create PDF report
-            pdf_filename = "glued_signal_report.pdf"
-            doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
-            elements = []
-            styles = getSampleStyleSheet()
-
-            # Add logos to the report
-            logo_left = ReportLabImage("icons/logo_left.png", width=1 * inch, height=1 * inch)
-            logo_right = ReportLabImage("icons/logo_right.png", width=1 * inch, height=1 * inch)
-            logo_table = Table([[logo_left, None, logo_right]], colWidths=[1 * inch, 4 * inch, 1 * inch])
-            elements.append(logo_table)
-            elements.append(Spacer(1, 0.5 * inch))
-
-            # Title
-            title = Paragraph("Glued Signal Report", styles["Title"])
-            elements.append(title)
-            elements.append(Spacer(1, 0.2 * inch))
-
-            # Subtitle
-            subtitle = Paragraph("This report includes comprehensive statistics and signal snapshots.", styles["BodyText"])
-            elements.append(subtitle)
-            elements.append(Spacer(1, 0.5 * inch))
-
-            # Statistics Table
-            def calculate_statistics(signal):
-                """Calculate and return statistics of the given signal."""
-                max_value = round(max(signal), 7)
-                min_value = round(min(signal), 7)
-                mean_value = round(np.mean(signal), 7)
-                std_dev_value = round(np.std(signal), 7)
-                duration = round(len(signal) / 100, 7)  # Assuming sample rate is 100 Hz
-
-                return [max_value, min_value, mean_value, std_dev_value, duration]
-
-            stats_data = [
-                ["Signal", "Max", "Min", "Mean", "Std Dev", "Duration (s)"],
-                ["Segment 1", *calculate_statistics(self.segment1)],
-                ["Segment 2", *calculate_statistics(self.segment2)],
-                ["Combined Segments", *calculate_statistics(combined_segments)],
-                ["Glued Signal", *calculate_statistics(self.glued_signal)],
-            ]
-
-            table = Table(stats_data, colWidths=[100, 100, 100, 100, 100, 100])
-            table.setStyle(TableStyle([
-                ("BACKGROUND", (0, 0), (-1, 0), colors.beige),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
-                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-                ("GRID", (0, 0), (-1, -1), 1, colors.black),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ]))
-            elements.append(table)
-            elements.append(Spacer(1, 0.5 * inch))
-
-            # Add  snapshot
-            for image_path, title_text in snapshots:
-                elements.append(Paragraph(title_text, styles["Heading2"]))
-                img = ReportLabImage(image_path, width=5 * inch, height=3 * inch)
-                img.hAlign = "CENTER"
-                elements.append(img)
-                elements.append(Spacer(1, 0.7 * inch))
-
-
-
-
-            doc.build(elements)
-            QMessageBox.information(self, "Report Generated", f"Report saved as {pdf_filename}")
-
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"An error occurred while generating the report: {str(e)}")
 
 
     def save_signal_plot(self, signal_data, filename, title):
@@ -221,4 +142,104 @@ class GluedSignalViewer(QWidget):
         plt.savefig(filename, bbox_inches='tight')
         plt.close()
         return filename, title
+
+
+
+    def take_snapshot(self):
+        """Capture a snapshot of the glued signal and store its data."""
+        try:
+            # Check if the glued_signal is empty or invalid
+            if self.glued_signal is None or self.glued_signal.size == 0:
+                QMessageBox.warning(self, "Warning", "No glued signal to snapshot.")
+                return
+
+            # Generate a unique filename for the snapshot
+            filename = f"snapshot_{len(self.snapshots) + 1}.png"
+            title = f"Snapshot {len(self.snapshots) + 1}"
+
+            # Save the plot and store snapshot
+            self.save_signal_plot(self.glued_signal, filename, title)
+            statistics = self.calculate_statistics(self.glued_signal)
+            self.snapshots.append({"filename": filename, "title": title, "stats": statistics})
+
+            QMessageBox.information(self, "Snapshot Taken", f"Snapshot {len(self.snapshots)} saved.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred while taking a snapshot: {str(e)}")
+
+
+    def calculate_statistics(self, signal):
+        """Calculate and return statistics of the given signal."""
+        max_value = round(max(signal), 2)
+        min_value = round(min(signal), 2)
+        mean_value = round(np.mean(signal), 2)
+        std_dev_value = round(np.std(signal), 2)
+        duration = round(len(signal) / 100, 2)  # Assuming sample rate is 100 Hz
+
+        return {
+            "max": max_value,
+            "min": min_value,
+            "mean": mean_value,
+            "std_dev": std_dev_value,
+            "duration": duration,
+        }
+
+    def generate_report(self):
+        """Generate a report with all snapshots and their data."""
+        try:
+            if not self.snapshots:
+                QMessageBox.warning(self, "Warning", "No snapshots available to generate a report.")
+                return
+
+            pdf_filename = "glued_signal_report.pdf"
+            doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
+            elements = []
+            styles = getSampleStyleSheet()
+
+            logo_left = ReportLabImage("icons/logo_left.png", width=1 * inch, height=1 * inch)
+            logo_right = ReportLabImage("icons/logo_right.png", width=1 * inch, height=1 * inch)
+            logo_table = Table([[logo_left, None, logo_right]], colWidths=[1 * inch, 4 * inch, 1 * inch])
+            elements.append(logo_table)
+            elements.append(Spacer(1, 0.5 * inch))
+
+            # Add report title and description
+            elements.append(Paragraph("Glued Signal Report", styles["Title"]))
+            elements.append(Spacer(1, 0.2 * inch))
+            elements.append(Paragraph("Snapshots and their statistics:", styles["BodyText"]))
+            elements.append(Spacer(1, 0.5 * inch))
+
+            # Add each snapshot with its data
+            for snapshot in self.snapshots:
+                # Add snapshot title
+                elements.append(Paragraph(snapshot["title"], styles["Heading2"]))
+
+                # Add statistics table
+                stats_data = [
+                    ["Max", "Min", "Mean", "Std Dev", "Duration (s)"],
+                    [
+                        snapshot["stats"]["max"],
+                        snapshot["stats"]["min"],
+                        snapshot["stats"]["mean"],
+                        snapshot["stats"]["std_dev"],
+                        snapshot["stats"]["duration"],
+                    ],
+                ]
+                stats_table = Table(stats_data)
+                stats_table.setStyle(TableStyle([
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.beige),
+                ]))
+                elements.append(stats_table)
+                elements.append(Spacer(1, 0.2 * inch))
+
+                # Add snapshot image
+                img = ReportLabImage(snapshot["filename"], width=5 * inch, height=3 * inch)
+                img.hAlign = "CENTER"
+                elements.append(img)
+                elements.append(Spacer(1, 0.5 * inch))
+
+            # Build the PDF
+            doc.build(elements)
+            QMessageBox.information(self, "Report Generated", f"Report saved as {pdf_filename}")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred while generating the report: {str(e)}")
 
