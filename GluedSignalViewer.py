@@ -22,6 +22,7 @@ from reportlab.platypus import PageBreak
 class GluedSignalViewer(QWidget):
     gap_changed = pyqtSignal(int)
     interpolation_changed = pyqtSignal(str)
+    interpolation_change_realtime = pyqtSignal(int)
 
     def __init__(self):
         super().__init__()
@@ -52,7 +53,7 @@ class GluedSignalViewer(QWidget):
 
         self.slider_label = QLabel("Gap Adjustment: 0")
         self.moving_slider = QSlider(Qt.Horizontal)
-        self.moving_slider.setRange(-50, 50)
+        self.moving_slider.setRange(-25, 25)
         self.moving_slider.setTickInterval(1)
         self.moving_slider.setTickPosition(QSlider.TicksBelow)
         self.moving_slider.sliderMoved.connect(self.update_slider_value)
@@ -64,6 +65,8 @@ class GluedSignalViewer(QWidget):
         self.interpolation_dropdown = QComboBox()
         self.interpolation_dropdown.addItems(["Linear", "Quadratic", "Cubic"])
         self.interpolation_dropdown.currentTextChanged.connect(self.update_interpolation_method)
+        self.interpolation_dropdown.currentTextChanged.connect(self.plot)
+
         self.interpolation_dropdown.setFixedWidth(150)
         self.form.addRow(QLabel("Interpolation Method:"), self.interpolation_dropdown)
 

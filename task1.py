@@ -18,10 +18,8 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QIcon, QColor, QCursor
 from PyQt5.QtCore import Qt, QTimer, QSize, pyqtSignal, QObject, QFileInfo
 
-
 from GluedSignalViewer import GluedSignalViewer as glueViewer
 from matplotlib.widgets import RectangleSelector
-
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -44,6 +42,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from PIL import Image
 
+
 # from backend_vs_code import stream_audio
 
 
@@ -54,6 +53,8 @@ def stream_audio(url):
         stderr=subprocess.DEVNULL
     )
     return process
+
+
 def plot_audio_signal(audio_process):
     plt.ion()  # Turn on interactive mode
     fig, ax = plt.subplots()
@@ -76,7 +77,8 @@ def plot_audio_signal(audio_process):
         with sd.InputStream(samplerate=44100, channels=1, callback=audio_callback):
             time_index = 0
             while plt.fignum_exists(fig.number):  # Check if the plot window is still open
-                data = audio_process.stdout.read(buffer_size * 2)  # Read buffer_size * 2 bytes to get buffer_size samples
+                data = audio_process.stdout.read(
+                    buffer_size * 2)  # Read buffer_size * 2 bytes to get buffer_size samples
                 if not data:
                     break
                 audio_data = np.frombuffer(data, dtype=np.int16) / 32768.0
@@ -87,7 +89,7 @@ def plot_audio_signal(audio_process):
                     # Update the x-axis so that time increases from left to right
                     new_time = np.arange(time_index - buffer_size, time_index)
                     line.set_xdata(new_time)  # Update time points on x-axis
-                    line.set_ydata(buffer)    # Update signal values on y-axis
+                    line.set_ydata(buffer)  # Update signal values on y-axis
                     ax.set_xlim(time_index - buffer_size, time_index)  # Shift the x-axis
                     fig.canvas.draw()
                     fig.canvas.flush_events()
@@ -106,22 +108,22 @@ class BackendVSTab(QWidget):
 
     def initUI(self):
         # Main layout
-        layout = QVBoxLayout()
-        layout.setSpacing(10)  # Add spacing between widgets
-        layout.setContentsMargins(15, 15, 15, 15)  # Add margins around the edges
-        self.setLayout(layout)
+        self.layout = QVBoxLayout()
+        self.layout.setSpacing(10)  # Add spacing between widgets
+        self.layout.setContentsMargins(15, 15, 15, 15)  # Add margins around the edges
+        self.setLayout(self.layout)
 
         # Create a title label with styled text
-        title_label = QLabel("Audio Visualization")
-        title_label.setStyleSheet("""
-            QLabel {
-                font-size: 18px;
-                font-weight: bold;
-                color: #2c3e50;
-                padding: 5px;
-            }
-        """)
-        layout.addWidget(title_label, alignment=Qt.AlignCenter)
+        # title_label = QLabel("Audio Visualization")
+        # title_label.setStyleSheet("""
+        #     QLabel {
+        #         font-size: 18px;
+        #         font-weight: bold;
+        #         color: #2c3e50;
+        #         padding: 5px;
+        #     }
+        # # """)
+        # self.layout.addWidget(title_label, alignment=Qt.AlignCenter)
 
         # Plot container (at the top)
         plot_container = QWidget()
@@ -133,21 +135,21 @@ class BackendVSTab(QWidget):
             }
         """)
         plot_layout = QVBoxLayout(plot_container)
-        
+
         # Matplotlib figure and canvas
         self.fig, self.ax = plt.subplots(facecolor='white')
         self.fig.set_size_inches(8, 4)  # Set a better default size
         self.canvas = FigureCanvas(self.fig)
         plot_layout.addWidget(self.canvas)
-        
+
         # Style the plot
         self.ax.set_facecolor('#000000')  # Light gray background
         self.ax.grid(True, linestyle='--', alpha=0.7)
         self.ax.set_xlabel("Time (ms)", fontsize=10, color='#2c3e50')
         self.ax.set_ylabel("Amplitude", fontsize=10, color='#2c3e50')
         self.ax.tick_params(colors='#2c3e50')
-        
-        layout.addWidget(plot_container)
+
+        self.layout.addWidget(plot_container)
 
         # Controls container (at the bottom)
         controls_container = QWidget()
@@ -174,7 +176,7 @@ class BackendVSTab(QWidget):
         controls_layout.addWidget(self.status_label, alignment=Qt.AlignCenter)
 
         # Play/Stop button with improved styling
-        self.play_stop_button = QPushButton("Play") # start backend vs code 
+        self.play_stop_button = QPushButton("Play")  # start backend vs code
         self.play_stop_button.setStyleSheet("""
             QPushButton {
                 background-color: #2ecc71;
@@ -195,7 +197,7 @@ class BackendVSTab(QWidget):
         self.play_stop_button.clicked.connect(self.toggle_backend_vs_code)
         controls_layout.addWidget(self.play_stop_button, alignment=Qt.AlignCenter)
 
-        layout.addWidget(controls_container)
+        self.layout.addWidget(controls_container)
 
         # Timer for updating the plot
         self.timer = QTimer()
@@ -255,7 +257,6 @@ class BackendVSTab(QWidget):
                     background-color: #c0392b;
                 }
             """)
-
 
     def run_backend_vs_code(self):
         url = "https://s44.myradiostream.com/9204/listen.mp3"
@@ -368,7 +369,6 @@ class BackendVSTab(QWidget):
         event.accept()
 
 
-
 class Signal:
     """Class to encapsulate individual signal data and plot elements."""
 
@@ -384,6 +384,7 @@ class Signal:
     def reset(self):
         """Reset the animation frame."""
         self.current_frame = 0
+
 
 class CustomToolbar(NavigationToolbar):
     """A custom toolbar that includes additional control buttons."""
@@ -436,11 +437,7 @@ class CustomToolbar(NavigationToolbar):
         self.rewind_btn.clicked.connect(self.rewind_animation.emit)
         self.addWidget(self.rewind_btn)
 
-
-
-
-
-         # Zoom In Button
+        # Zoom In Button
         self.zoom_in_btn = QToolButton()
         self.zoom_in_btn.setIcon(QIcon("C:icons/zoomin2.png"))
         self.zoom_in_btn.setToolTip("Zoom In")
@@ -471,7 +468,6 @@ class CustomToolbar(NavigationToolbar):
         self.link_btn.clicked.connect(self.change_label)
         self.addWidget(self.link_btn)
 
-
         # Save Image Button
         self.save_img_btn = QToolButton()
         self.save_img_btn.setIcon(QIcon("C:icons/save.jpg"))
@@ -495,7 +491,6 @@ class CustomToolbar(NavigationToolbar):
             self.label_state = 1
 
 
-
 class SignalViewer(QWidget):
     """A widget that displays a signal plot with controls."""
 
@@ -506,7 +501,6 @@ class SignalViewer(QWidget):
         super().__init__()
 
         self.setWindowTitle(title)
-
 
         #  main layout (vertical layout)
         main_layout = QVBoxLayout()
@@ -538,17 +532,15 @@ class SignalViewer(QWidget):
         plot_controls_layout = QHBoxLayout()
         main_layout.addLayout(plot_controls_layout)
 
-         #  plot lines (multiple signals)
+        #  plot lines (multiple signals)
         self.signals = {}  # Signal instances with unique IDs
-        self.next_signal_id = 1  #  ID for signals
+        self.next_signal_id = 1  # ID for signals
         self.all_amplitudes = []  # Store amplitudes of all signals for y-axis limit calculation
-        self.all_times = []         # Store times of all signals for x-axis limit calculation
-        self.data=[]               # Store data of all signals
-
+        self.all_times = []  # Store times of all signals for x-axis limit calculation
+        self.data = []  # Store data of all signals
 
         # Left side: Plot and toolbar
         plot_layout = QVBoxLayout()
-        plot_layout.setContentsMargins(0, 0, 0, 0)
         plot_controls_layout.addLayout(plot_layout, stretch=3)
 
         #  Figure and Canvas
@@ -561,8 +553,7 @@ class SignalViewer(QWidget):
         self.ax.tick_params(axis='x', colors='white')
         self.ax.tick_params(axis='y', colors='white')
         self.ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='gray')
-        self.fig.subplots_adjust(left=0.062, right=0.99, bottom=0.21)
-
+        self.fig.subplots_adjust(bottom=0.2)
 
         #  plot line
         self.line, = self.ax.plot([], [], color='lime')
@@ -589,7 +580,6 @@ class SignalViewer(QWidget):
         self.toolbar.reset_zoom_signal.connect(self.reset_zoom)
         self.toolbar.link_graphs.connect(self.link)
 
-
         # Slider for manual navigation
         slider_layout = QVBoxLayout()
         self.slider_label = QLabel("Navigate Signal:")
@@ -605,8 +595,6 @@ class SignalViewer(QWidget):
         plot_layout.addLayout(slider_layout)
         self.slider.sliderMoved.connect(self.slider_moved)
         self.last_mouse_x_position = None
-
-
 
         # Right side: Signals List and Controls
         self.controls_layout = QVBoxLayout()
@@ -669,13 +657,14 @@ class SignalViewer(QWidget):
         self.is_paused = False
         self.isLinked = False
         self.window_size = 3
+        self.gap = 0
         self.timer = QTimer()
         self.timer.setInterval(50)
         self.timer.timeout.connect(self.update_plot)
         self.set_controls_enabled(False)
         self.slider_is_moving = False
         self.panning = False
-        self.last_mouse_x_position=None
+        self.last_mouse_x_position = None
         self.pan_start = None
         self.selected_start = None
         self.selected_end = None
@@ -699,10 +688,10 @@ class SignalViewer(QWidget):
         # Capture start and end x-coordinates from selection
         self.selected_start = eclick.xdata
         self.selected_end = erelease.xdata
-        print(f"Selected range: Start={np.round(self.selected_start,2)}, End={np.round(self.selected_end,2)}")
-    def selected_segment(self):
-        return np.round(self.selected_start,2), np.round(self.selected_end,2)
+        print(f"Selected range: Start={np.round(self.selected_start, 2)}, End={np.round(self.selected_end, 2)}")
 
+    def selected_segment(self):
+        return np.round(self.selected_start, 2), np.round(self.selected_end, 2)
 
     def set_controls_enabled(self, enabled: bool):
         """Enable or disable the signal control buttons based on whether a signal is selected."""
@@ -770,6 +759,13 @@ class SignalViewer(QWidget):
             return
         signal_id = self.signal_selector.itemData(current_index)
         self.clear_signal_by_id(signal_id)
+        if self.linker and self.isLinked:
+            current_index = self.linker.signal_selector.currentIndex()
+            if current_index < 0:
+                return
+            signal_id = self.linker.signal_selector.itemData(current_index)
+            self.linker.clear_signal_by_id(signal_id)
+
     def generate_color_palette(self):
         """Generate a list of distinct colors for multiple signals."""
         return list(mcolors.TABLEAU_COLORS.keys()) + list(mcolors.CSS4_COLORS.keys())
@@ -783,8 +779,6 @@ class SignalViewer(QWidget):
         # If all predefined colors are used, generate a random color
         return QColor(np.random.randint(0, 256), np.random.randint(0, 256), np.random.randint(0, 256)).name()
 
-
-
     def change_signal_color(self):
         """Change the color of the selected signal."""
         if self.selected_signal_id is not None:
@@ -797,6 +791,11 @@ class SignalViewer(QWidget):
                 self.color_btn.setStyleSheet(f"background-color: {new_color}")
                 self.canvas.draw()
 
+        if self.linker.selected_signal_id is not None:
+            signal2 = self.linker.signals[self.linker.selected_signal_id]
+            signal2.line.set_color(new_color)
+            self.linker.color_btn.setStyleSheet(f"background-color: {new_color}")
+            self.linker.canvas.draw()
 
     def toggle_signal_visibility(self, state):
         """Toggle the visibility of the selected signal."""
@@ -811,9 +810,11 @@ class SignalViewer(QWidget):
             signal = self.linker.signals[self.linker.selected_signal_id]
             signal.visible = is_visible
             signal.line.set_visible(is_visible)
+            if not self.visibility_checkbox.isChecked():
+                self.linker.visibility_checkbox.setChecked(False)
+            else:
+                self.linker.visibility_checkbox.setChecked(True)
             self.linker.canvas.draw()
-
-
 
     def clear_signal_by_id(self, signal_id: int):
         """Remove a specific signal from the plot, ComboBox, and UI."""
@@ -851,7 +852,6 @@ class SignalViewer(QWidget):
                 # Update the legend
                 handles, labels = self.ax.get_legend_handles_labels()
 
-
                 if any(label and not label.startswith('_') for label in labels):
                     self.ax.legend(loc='upper right')
                 else:
@@ -871,7 +871,7 @@ class SignalViewer(QWidget):
             self.next_signal_id = self.next_signal_id - 1
             self.slider.setValue(0)
             self.timer.stop()
-            self.is_paused=False
+            self.is_paused = False
             self.toolbar.toggle_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
 
         # Redraw the canvas to reflect changes
@@ -879,8 +879,6 @@ class SignalViewer(QWidget):
 
         # Update slider maximum based on current signals
         self.update_slider_maximum()
-
-
 
     def move_signal(self):
         """Triggered when Move button is clicked to move the selected signal."""
@@ -892,7 +890,6 @@ class SignalViewer(QWidget):
 
         signal_id = self.signal_selector.itemData(current_index)
         self.emit_request_move_signal(signal_id)
-
 
     def emit_request_move_signal(self, signal_id: int):
         """Emit a signal to move the specified signal to another viewer."""
@@ -910,7 +907,6 @@ class SignalViewer(QWidget):
     #     interval = max(1, 100 - speed)  # Map slider value to interval, at least 1 ms
     #     self.timer.setInterval(interval)
 
-
     def upload_signal(self):
         """Upload and load signal data from CSV files."""
         file_paths, _ = QFileDialog.getOpenFileNames(
@@ -922,8 +918,7 @@ class SignalViewer(QWidget):
                 try:
                     # Load data
                     data = np.genfromtxt(file_path, delimiter=',', skip_header=0)
-                    self.data=data
-
+                    self.data = data
 
                     if data.ndim == 1:
                         data = data.reshape(-1, 1)  # Ensure 2D array
@@ -939,14 +934,12 @@ class SignalViewer(QWidget):
                     time = data[:, 0] - data[0, 0]
                     amplitude = data[:, 1]
 
-
                     self.all_amplitudes.append(amplitude)
                     self.all_times.append(time)
 
                     #  unique id for the signal
                     signal_id = self.next_signal_id
                     signal_name = os.path.splitext(os.path.basename(file_path))[0]
-
 
                     # unique color for the signal
                     color = self.get_unique_color()
@@ -1029,7 +1022,7 @@ class SignalViewer(QWidget):
 
         if updated:
             # Adjust x-axis to show a moving window based on the latest time across all signals
-            latest_time = max([s.time[min(s.current_frame, len(s.time)-1)] for s in self.signals.values()])
+            latest_time = max([s.time[min(s.current_frame, len(s.time) - 1)] for s in self.signals.values()])
             if latest_time > self.window_size:
                 self.ax.set_xlim(latest_time - self.window_size, latest_time)
             else:
@@ -1051,7 +1044,6 @@ class SignalViewer(QWidget):
 
                 # Set Y-axis limits with padding
                 self.ax.set_ylim(visible_y_min - padding, visible_y_max + padding)
-
 
             self.canvas.draw()
 
@@ -1088,8 +1080,6 @@ class SignalViewer(QWidget):
                 self.linker.timer.stop()
                 self.linker.toolbar.toggle_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
 
-
-
     def rewind_animation(self):
         """Rewind the animation to the beginning."""
         if self.signals:
@@ -1114,8 +1104,6 @@ class SignalViewer(QWidget):
             self.linker.slider.setValue(0)
             self.linker.timer.start()
 
-
-
     def toggle_all_visibility(self, state):
         """Show or hide all signal plots."""
         is_visible = state == Qt.Checked
@@ -1125,9 +1113,15 @@ class SignalViewer(QWidget):
         self.canvas.draw()
         if self.linker and self.isLinked:
             is_visible = state == Qt.Checked
+            print(Qt.Checked)
             for signal in self.linker.signals.values():
                 signal.visible = is_visible
                 signal.line.set_visible(is_visible)
+            if not self.show_checkbox.isChecked():
+                self.linker.show_checkbox.setChecked(False)
+            else:
+                self.linker.show_checkbox.setChecked(True)
+
             self.linker.canvas.draw()
 
     def link(self):
@@ -1139,14 +1133,15 @@ class SignalViewer(QWidget):
                 self.linker.rewind_animation()
                 self.isLinked = True
                 self.linker.isLinked = True
+                self.linker.toolbar.change_label()
                 return True
         else:
             self.isLinked = False
             if self.linker:
                 self.linker.isLinked = False
+                self.linker.toolbar.change_label()
 
             return False
-
 
     def toggle_visibility(self, state):
         """Show or hide the signal plot."""
@@ -1157,10 +1152,10 @@ class SignalViewer(QWidget):
                 self.line.set_visible(False)
             self.canvas.draw()
         if self.linker and self.isLinked:
-            if state == Qt.Checked:
-                self.linker.line.set_visible(True)
+            if not self.visibility_checkbox.isChecked():
+                self.linker.visibility_checkbox.setChecked(False)
             else:
-                self.linker.line.set_visible(False)
+                self.linker.visibility_checkbox.setChecked(True)
             self.linker.canvas.draw()
 
     def change_speed(self, value):
@@ -1172,6 +1167,7 @@ class SignalViewer(QWidget):
         self.timer.setInterval(interval)
         if self.linker and self.isLinked:
             self.linker.timer.setInterval(interval)
+            self.linker.speed_slider.setValue(self.speed_slider.value())
 
     def save_plot_pdf(self):
         """Save the current plot and statistics as a PDF report."""
@@ -1204,8 +1200,6 @@ class SignalViewer(QWidget):
             except Exception as e:
                 QMessageBox.critical(self, "Save Plot Error", f"Failed to save plot:\n{e}")
 
-
-
     def slider_moved(self, position):
         """Handle slider movement to navigate the signal."""
         if not self.signals:
@@ -1225,7 +1219,7 @@ class SignalViewer(QWidget):
 
         # Adjust x-axis to fit the current frame
         if self.signals:
-            latest_time = max([s.time[min(s.current_frame, len(s.time)-1)] for s in self.signals.values()])
+            latest_time = max([s.time[min(s.current_frame, len(s.time) - 1)] for s in self.signals.values()])
             if latest_time > self.window_size:
                 self.ax.set_xlim(latest_time - self.window_size, latest_time)
             else:
@@ -1295,14 +1289,15 @@ class SignalViewer(QWidget):
 
         # Ensure the new X-limits don't exceed the current frame's data bounds
         full_x_min = min([s.time[0] for s in self.signals.values()])
-        full_x_max = max([s.time[min(s.current_frame, len(s.time)-1)] for s in self.signals.values()])
+        full_x_max = max([s.time[min(s.current_frame, len(s.time) - 1)] for s in self.signals.values()])
 
         # Clamp X-limits to the data bounds
         new_xlim[0] = max(full_x_min, new_xlim[0])
         new_xlim[1] = min(full_x_max, new_xlim[1])
 
         # Calculate dynamic Y-limits based on the visible X-limits
-        visible_signals = [s.amplitude[(s.time >= new_xlim[0]) & (s.time <= new_xlim[1])] for s in self.signals.values()]
+        visible_signals = [s.amplitude[(s.time >= new_xlim[0]) & (s.time <= new_xlim[1])] for s in
+                           self.signals.values()]
         visible_y_min = min([v.min() for v in visible_signals if len(v) > 0])
         visible_y_max = max([v.max() for v in visible_signals if len(v) > 0])
 
@@ -1358,7 +1353,7 @@ class SignalViewer(QWidget):
 
         # Ensure the new X-limits don't exceed the full data bounds
         full_x_min = min([s.time[0] for s in self.signals.values()])
-        full_x_max = max([s.time[min(s.current_frame, len(s.time)-1)] for s in self.signals.values()])
+        full_x_max = max([s.time[min(s.current_frame, len(s.time) - 1)] for s in self.signals.values()])
 
         # Limit X-axis panning with clamped values
         new_xlim[0] = max(full_x_min, new_xlim[0])
@@ -1387,7 +1382,6 @@ class SignalViewer(QWidget):
         if self.linker and self.isLinked:
             self._apply_panning_to_linker(dx)
 
-
     def _apply_panning_to_linker(self, dx):
         """Applies the panning logic to the linked plot."""
         # Get the current X limits for the linker
@@ -1398,7 +1392,7 @@ class SignalViewer(QWidget):
 
         # Ensure the new X-limits don't exceed the linker's data bounds
         full_x_min = min([s.time[0] for s in self.linker.signals.values()])
-        full_x_max = max([s.time[min(s.current_frame, len(s.time)-1)] for s in self.linker.signals.values()])
+        full_x_max = max([s.time[min(s.current_frame, len(s.time) - 1)] for s in self.linker.signals.values()])
 
         # Limit X-axis panning with clamped values
         new_xlim_linker[0] = max(full_x_min, new_xlim_linker[0])
@@ -1408,7 +1402,8 @@ class SignalViewer(QWidget):
 
         # Dynamic Y-limits based on visible signals in new X-limits
         visible_signals = [
-            s.amplitude[(s.time >= new_xlim_linker[0]) & (s.time <= new_xlim_linker[1])] for s in self.linker.signals.values()
+            s.amplitude[(s.time >= new_xlim_linker[0]) & (s.time <= new_xlim_linker[1])] for s in
+            self.linker.signals.values()
         ]
 
         if visible_signals and any(len(v) > 0 for v in visible_signals):
@@ -1422,7 +1417,6 @@ class SignalViewer(QWidget):
             self.linker.ax.set_ylim(visible_y_min - padding, visible_y_max + padding)
 
         self.linker.canvas.draw()
-
 
     def zoom(self, scale=1.0):
         """Zoom the plot by a scale factor centered at the plot center, with limits based on the current frame's data."""
@@ -1448,7 +1442,7 @@ class SignalViewer(QWidget):
 
         # Get the limits of the current frame data across all signals
         full_x_min = min([s.time[0] for s in self.signals.values()])
-        full_x_max = max([s.time[min(s.current_frame, len(s.time)-1)] for s in self.signals.values()])
+        full_x_max = max([s.time[min(s.current_frame, len(s.time) - 1)] for s in self.signals.values()])
 
         # Define minimum and maximum zoom scale factors to prevent excessive zooming
         min_scale = 0.1  # Don't zoom in beyond this scale
@@ -1471,7 +1465,8 @@ class SignalViewer(QWidget):
         self.ax.set_xlim(new_xlim)
 
         # Dynamic Y-limits based on visible signals within new X-limits
-        visible_signals = [s.amplitude[(s.time >= new_xlim[0]) & (s.time <= new_xlim[1])] for s in self.signals.values()]
+        visible_signals = [s.amplitude[(s.time >= new_xlim[0]) & (s.time <= new_xlim[1])] for s in
+                           self.signals.values()]
 
         if visible_signals and any(len(v) > 0 for v in visible_signals):
             visible_y_min = min([v.min() for v in visible_signals if len(v) > 0])
@@ -1495,7 +1490,6 @@ class SignalViewer(QWidget):
         if self.linker and self.isLinked:
             self._apply_zoom_to_linker(scale)
 
-
     def _apply_zoom_to_linker(self, scale):
         """Applies the same zooming logic to the linked plot."""
         cur_xlim = self.linker.ax.get_xlim()
@@ -1509,7 +1503,7 @@ class SignalViewer(QWidget):
 
         # Get the limits of the current frame data across all linked signals
         full_x_min = min([s.time[0] for s in self.linker.signals.values()])
-        full_x_max = max([s.time[min(s.current_frame, len(s.time)-1)] for s in self.linker.signals.values()])
+        full_x_max = max([s.time[min(s.current_frame, len(s.time) - 1)] for s in self.linker.signals.values()])
 
         # Define minimum and maximum zoom scale factors
         min_scale = 0.1
@@ -1537,7 +1531,8 @@ class SignalViewer(QWidget):
         new_xlim[1] = min(full_x_max, new_xlim[1])
 
         # Dynamic Y-limits based on visible signals within new X-limits
-        visible_signals = [s.amplitude[(s.time >= new_xlim[0]) & (s.time <= new_xlim[1])] for s in self.linker.signals.values()]
+        visible_signals = [s.amplitude[(s.time >= new_xlim[0]) & (s.time <= new_xlim[1])] for s in
+                           self.linker.signals.values()]
 
         if visible_signals and any(len(v) > 0 for v in visible_signals):
             visible_y_min = min([v.min() for v in visible_signals if len(v) > 0])
@@ -1570,7 +1565,7 @@ class SignalViewer(QWidget):
             current_time = self.last_mouse_x_position
         else:
             # Fall back to current frame's time if no mouse interaction
-            current_frame_times = [s.time[min(s.current_frame, len(s.time)-1)] for s in self.signals.values()]
+            current_frame_times = [s.time[min(s.current_frame, len(s.time) - 1)] for s in self.signals.values()]
             current_time = max(current_frame_times)
 
         # Calculate new X limits (centered on the current frame or mouse position)
@@ -1581,7 +1576,7 @@ class SignalViewer(QWidget):
 
         # Ensure the new X-limits are within the data bounds
         full_x_min = min([s.time[0] for s in self.signals.values()])
-        full_x_max = max([s.time[min(s.current_frame, len(s.time)-1)] for s in self.signals.values()])
+        full_x_max = max([s.time[min(s.current_frame, len(s.time) - 1)] for s in self.signals.values()])
         new_xlim = [max(full_x_min, new_xlim[0]), min(full_x_max, new_xlim[1])]
 
         self.ax.set_xlim(new_xlim)
@@ -1596,6 +1591,7 @@ class SignalViewer(QWidget):
             self.linker.ax.set_xlim(new_xlim)
             self._update_y_limits(new_xlim, linked=True)
             self.linker.canvas.draw()
+
     def _update_y_limits(self, xlim, linked=False):
         """Helper function to update Y-axis limits based on visible X-limits."""
         signals = self.linker.signals if linked else self.signals
@@ -1614,8 +1610,6 @@ class SignalViewer(QWidget):
             self.ax.set_ylim(visible_y_min - padding, visible_y_max + padding)
             if linked:
                 self.linker.ax.set_ylim(visible_y_min - padding, visible_y_max + padding)
-
-
 
     def get_plot_center(self):
         """Get the center point of the current plot view."""
@@ -1712,9 +1706,6 @@ class CustomToolbar2(QWidget):
             }
         """)
 
-
-
-
         buttons_layout = QHBoxLayout()
         self.upload_button = QPushButton("Upload")
         buttons_layout.addWidget(self.upload_button)
@@ -1756,10 +1747,9 @@ class RadarViewer(QWidget):
         super(RadarViewer, self).__init__(parent)
         main_layout = QVBoxLayout()
 
-
-         # Set up light mode style
+        # Set up light mode style
         plt.style.use('default')
-        self.figure, self.ax = plt.subplots(subplot_kw={'projection': 'polar'}, figsize=(8, 8))
+        self.figure, self.ax = plt.subplots(subplot_kw={'projection': 'polar'}, figsize=(5, 5))
 
         # Set a light background for the figure and plot area
         self.figure.patch.set_facecolor('white')
@@ -1768,7 +1758,6 @@ class RadarViewer(QWidget):
         # Customize grid and axis lines for light mode
         self.ax.grid(color='#cccccc', linestyle='--', alpha=0.7)
         self.ax.spines['polar'].set_color('#cccccc')
-
 
         # # Set up dark mode style
         # plt.style.use('dark_background')
@@ -1905,7 +1894,8 @@ class RadarViewer(QWidget):
 
     def upload_signal(self):
         options = QFileDialog.Options()
-        file_name, _ = QFileDialog.getOpenFileName(self, "Select Signal File", "", "CSV Files (*.csv);;All Files (*)", options=options)
+        file_name, _ = QFileDialog.getOpenFileName(self, "Select Signal File", "", "CSV Files (*.csv);;All Files (*)",
+                                                   options=options)
         if file_name:
             self.load_signal_data(file_name)
 
@@ -1920,12 +1910,9 @@ class RadarViewer(QWidget):
             self.toolbar.signal_select.addItem(signal_name)
             self.toolbar.signal_select.setCurrentIndex(len(self.signal_data_list) - 1)  # Update to newly added signal
             self.update_buttons()
-            #self.toolbar.reset_button.setEnabled(True)  # Enable reset button
-            #self.toolbar.start_button.setEnabled(True)
-            if len(self.signal_data_list) == 1:
-                self.start_signal()
-                self.is_playing = not self.is_playing
-
+            # self.toolbar.reset_button.setEnabled(True)  # Enable reset button
+            # self.toolbar.start_button.setEnabled(True)
+            self.start_signal()
 
         except Exception as e:
             print(f"Error loading signal data: {e}")
@@ -1934,15 +1921,10 @@ class RadarViewer(QWidget):
         self.selected_index = self.toolbar.signal_select.currentIndex()
         self.update_buttons()
 
-
-
-
-
     def start_signal(self):
         if self.selected_index >= 0:
             print(f"Start signal 1 {self.selected_index}")
             self.timer.start(100)
-            self.toolbar.play_button.setText("Pause")
 
     def stop_signal(self):
         if self.selected_index >= 0:
@@ -2049,7 +2031,6 @@ class RadarViewer(QWidget):
             self.toolbar.delete_button.setEnabled(False)  # Ensure delete button is disabled
 
 
-
 class MainWindow(QMainWindow):
     """Main application window containing two SignalViewer instances."""
 
@@ -2068,7 +2049,7 @@ class MainWindow(QMainWindow):
         self.gap = 0
         self.segment1 = []
         self.segment2 = []
-        self.interpolation_order= None
+        self.interpolation_order = None
 
         # Create a QTabWidget
         self.tab_widget = QTabWidget(self)
@@ -2093,22 +2074,25 @@ class MainWindow(QMainWindow):
         signal_viewers_layout.addWidget(self.viewer2)
 
         # Create Backend VS Code tab
-        self.backend_vs_tab = BackendVSTab()
-        self.tab_widget.addTab(self.backend_vs_tab, "Signal Broadcasting")
-
-
-        # Create the Radar Signal tab
         self.radar_signal_tab = QWidget()
-        self.tab_widget.addTab(self.radar_signal_tab, "Radar Signal")
+        self.tab_widget.addTab(self.radar_signal_tab, "Non-rectange & Realtime")
 
-        # Add RadarViewer to Radar Signal tab
+        # Create the layout for the Radar Signal tab (Horizontal Layout)
         radar_signal_layout = QVBoxLayout(self.radar_signal_tab)
-        self.radar_viewer = RadarViewer()
-        radar_signal_layout.addWidget(self.radar_viewer)
 
+        # Create RadarViewer and BackendVSTab instances
+        self.radar_viewer = RadarViewer()  # Radar viewer widget
+        self.backend_vs_tab = BackendVSTab()  # Backend VS tab widget
+
+        # Add both widgets to the layout
+        radar_signal_layout.addWidget(self.radar_viewer)  # Add RadarViewer
+        radar_signal_layout.addWidget(self.backend_vs_tab)  # Add BackendVSTab
+
+        # Set the layout for the Radar Signal tab
+        self.radar_signal_tab.setLayout(radar_signal_layout)
         # Optional: Set window icon and adjust size
         self.setWindowIcon(QIcon("icons/Signal.png"))  # Update path as needed
-        self.resize(1200, 1000)
+        self.resize(1400, 1000)
 
         self.toolbar = self.addToolBar("Tools")
 
@@ -2117,11 +2101,11 @@ class MainWindow(QMainWindow):
         self.viewer_glued = glueViewer()
 
         self.viewer_glued.gap_changed.connect(self.update_gap)
+        self.viewer_glued.interpolation_changed.connect(self.update_gap)
 
         # Connect glue button to open the glue parameters dialog
         self.glue_button.clicked.connect(self.open_glue_dialog)
         self.glue_button.clicked.connect(self.delete_selected_region)
-
 
         # Connect move signals if needed
         self.viewer1.request_move_signal.connect(
@@ -2131,11 +2115,10 @@ class MainWindow(QMainWindow):
             lambda signal_id: self.move_signal_by_id(signal_id, self.viewer2, self.viewer1)
         )
 
-
     def open_glue_dialog(self):
         try:
-            start1, end1 =self.viewer1.selected_segment()
-            start2,end2=self.viewer2.selected_segment()
+            start1, end1 = self.viewer1.selected_segment()
+            start2, end2 = self.viewer2.selected_segment()
 
             self.start1 = start1  # start time of the first signal
             self.end1 = end1  # end time of the first signal
@@ -2143,9 +2126,8 @@ class MainWindow(QMainWindow):
             self.end2 = end2  # end time of the second signal
             self.kind = 1
 
-
-            signal1_segment, signal1_time = self.viewer1.get_signal_segment(start1, end1 )
-            signal2_segment, signal2_time = self.viewer2.get_signal_segment(start2, end2 )
+            signal1_segment, signal1_time = self.viewer1.get_signal_segment(start1, end1)
+            signal2_segment, signal2_time = self.viewer2.get_signal_segment(start2, end2)
             self.segment1 = signal1_segment
             self.segment2 = signal2_segment
             self.time1 = signal1_time
@@ -2167,13 +2149,13 @@ class MainWindow(QMainWindow):
         except:
             self.show_message_box("You Should Upload Signal or Select a region")
 
-
     def delete_selected_region(self):
         self.viewer1.selector.clear()
         self.viewer2.selector.clear()
 
     def update_gap(self, gap):
-        self.gap = gap
+        if not isinstance(gap, str):
+            self.gap = gap
         interpolation_map = {"Linear": 1, "Quadratic": 2, "Cubic": 3}
         self.interpolation_order = interpolation_map.get(self.viewer_glued.interpolation_method, 1)
         print(self.interpolation_order)
@@ -2183,7 +2165,7 @@ class MainWindow(QMainWindow):
 
     def concatenate_signals(self):
         if self.gap > 0:
-            time2 = self.time2 + self.time1[len(self.time1)-1] + self.gap
+            time2 = self.time2 + self.time1[len(self.time1) - 1] + self.gap
             concatenated_x_time = np.concatenate([self.time1, time2])
             concatenated_y_amplitude = np.concatenate([self.segment1, self.segment2])
             glued_signal_interpolated = self.fit_curve(concatenated_x_time, concatenated_y_amplitude, time2)
@@ -2236,9 +2218,9 @@ class MainWindow(QMainWindow):
 
         # Add signal to target viewer
         print(f"id before : {target_viewer.next_signal_id}")
-        #signal.name=f"Signal {target_viewer.next_signal_id}"
+        # signal.name=f"Signal {target_viewer.next_signal_id}"
         target_viewer.signals[target_viewer.next_signal_id] = signal
-        #signal.color=target_viewer.get_unique_color()
+        # signal.color=target_viewer.get_unique_color()
 
         # Plot the signal in the target viewer
         line, = target_viewer.ax.plot([], [], label=signal.name, color=signal.color)
@@ -2248,7 +2230,7 @@ class MainWindow(QMainWindow):
 
         # Add the signal to the ComboBox in the target viewer
         target_viewer.add_signal(signal)
-        #target_viewer.signal_selector.addItem(signal.name, target_viewer.next_signal_id)
+        # target_viewer.signal_selector.addItem(signal.name, target_viewer.next_signal_id)
 
         print(f"id after : {target_viewer.next_signal_id}")
 
