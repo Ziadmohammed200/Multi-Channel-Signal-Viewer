@@ -542,6 +542,7 @@ class SignalViewer(QWidget):
         # Left side: Plot and toolbar
         plot_layout = QVBoxLayout()
         plot_controls_layout.addLayout(plot_layout, stretch=3)
+        plot_layout.setContentsMargins(0, 0, 0, 0)
 
         #  Figure and Canvas
         self.fig = Figure(facecolor='black')
@@ -553,7 +554,7 @@ class SignalViewer(QWidget):
         self.ax.tick_params(axis='x', colors='white')
         self.ax.tick_params(axis='y', colors='white')
         self.ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='gray')
-        self.fig.subplots_adjust(bottom=0.2)
+        self.fig.subplots_adjust(left=0.08, right=0.99, bottom=0.2)
 
         #  plot line
         self.line, = self.ax.plot([], [], color='lime')
@@ -863,8 +864,8 @@ class SignalViewer(QWidget):
         else:
             # Clear the axes if no signals remain
             self.ax.clear()
-            self.ax.set_xlabel("Time")
-            self.ax.set_ylabel("Amplitude")
+            self.ax.set_xlabel("Time (s)", color='white')
+            self.ax.set_ylabel("Amplitude (v)", color='white')
             self.ax.set_ylim(-1, 1)
             self.ax.set_xlim(0, self.window_size)
             self.ax.grid(True)
@@ -872,6 +873,7 @@ class SignalViewer(QWidget):
             self.slider.setValue(0)
             self.timer.stop()
             self.is_paused = False
+            self.fig.subplots_adjust(left=0.085, right=0.97, bottom=0.2)
             self.toolbar.toggle_btn.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
 
         # Redraw the canvas to reflect changes
@@ -1006,6 +1008,7 @@ class SignalViewer(QWidget):
         """Update the plot for animation."""
         if not self.signals or self.is_paused or self.slider_is_moving:
             return
+        self.fig.subplots_adjust(left=0.085, right=0.97, bottom=0.2)
 
         updated = False
 
@@ -1250,73 +1253,80 @@ class SignalViewer(QWidget):
             self.linker.slider_is_moving = False
 
     def on_scroll(self, event):
-        """Zoom in or out based on mouse scroll, with limits to avoid zooming out of data range."""
+        """Zoom in or out based on mouse scroll, including Y-axis zoom functionality."""
         if not self.signals:
             return
 
         scale_factor = 1.1
-        # Zoom in or out depending on the scroll direction
-        if event.button == 'up':
-            # Zoom in
-            scale = 1 / scale_factor
-        elif event.button == 'down':
-            # Zoom out
-            scale = scale_factor
-        else:
-            return
+        min_x_range = 0.1  # Minimum range for X-axis
+        max_x_range = 100  # Maximum range for X-axis
+        min_y_range = 0.1  # Minimum range for Y-axis
+        max_y_range = 100  # Maximum range for Y-axis
 
-        # Get the mouse position (data coordinates)
-        xdata, ydata = event.xdata, event.ydata
-        if xdata is None or ydata is None:
+        # Determine zoom direction
+        if event.button == 'up':
+            scale = 1 / scale_factor  # Zoom in
+        elif event.button == 'down':
+            scale = scale_factor  # Zoom out
+        else:
             return
 
         # Get current axis limits
         cur_xlim = self.ax.get_xlim()
         cur_ylim = self.ax.get_ylim()
 
-        # Compute new width and height based on zoom scale
+        # Calculate new width and height
         new_width = (cur_xlim[1] - cur_xlim[0]) * scale
         new_height = (cur_ylim[1] - cur_ylim[0]) * scale
 
-        # Calculate the relative position of the mouse within the current axes
-        relx = (xdata - cur_xlim[0]) / (cur_xlim[1] - cur_xlim[0])
+        # Ensure minimum and maximum zoom levels for both axes
+        if new_width < min_x_range or new_width > max_x_range:
+            new_width = cur_xlim[1] - cur_xlim[0]  # Lock X range if out of bounds
+        if new_height < min_y_range or new_height > max_y_range:
+            new_height = cur_ylim[1] - cur_ylim[0]  # Lock Y range if out of bounds
 
-        # Update x and y limits to zoom centered around the mouse position
+        # Get mouse position in data coordinates
+        xdata, ydata = event.xdata, event.ydata
+        if xdata is None or ydata is None:
+            return
+
+        # Calculate relative position of the mouse in X and Y axes
+        relx = (xdata - cur_xlim[0]) / (cur_xlim[1] - cur_xlim[0])
+        rely = (ydata - cur_ylim[0]) / (cur_ylim[1] - cur_ylim[0])
+
+        # Update X and Y limits
         new_xlim = [
             xdata - new_width * relx,
             xdata + new_width * (1 - relx)
         ]
+        new_ylim = [
+            ydata - new_height * rely,
+            ydata + new_height * (1 - rely)
+        ]
 
-        # Ensure the new X-limits don't exceed the current frame's data bounds
+        # Clamp X-limits to data bounds
         full_x_min = min([s.time[0] for s in self.signals.values()])
-        full_x_max = max([s.time[min(s.current_frame, len(s.time) - 1)] for s in self.signals.values()])
-
-        # Clamp X-limits to the data bounds
+        full_x_max = max([s.time[min(s.current_frame, len(s.time)-1)] for s in self.signals.values()])
         new_xlim[0] = max(full_x_min, new_xlim[0])
         new_xlim[1] = min(full_x_max, new_xlim[1])
 
-        # Calculate dynamic Y-limits based on the visible X-limits
-        visible_signals = [s.amplitude[(s.time >= new_xlim[0]) & (s.time <= new_xlim[1])] for s in
-                           self.signals.values()]
-        visible_y_min = min([v.min() for v in visible_signals if len(v) > 0])
-        visible_y_max = max([v.max() for v in visible_signals if len(v) > 0])
+        # Clamp Y-limits to visible signal bounds
+        visible_signals = [s.amplitude[(s.time >= new_xlim[0]) & (s.time <= new_xlim[1])] for s in self.signals.values()]
+        visible_y_min = min([v.min() for v in visible_signals if len(v) > 0], default=cur_ylim[0])
+        visible_y_max = max([v.max() for v in visible_signals if len(v) > 0], default=cur_ylim[1])
 
-        # Add padding to the Y-axis
-        y_range = visible_y_max - visible_y_min
-        y_padding = 0.05 * y_range if y_range > 0 else 0.1
-        new_ylim = [
-            visible_y_min - y_padding,
-            visible_y_max + y_padding
-        ]
+        # Adjust Y-axis limits based on the current zoom
+        new_ylim[0] = max(visible_y_min, new_ylim[0])
+        new_ylim[1] = min(visible_y_max, new_ylim[1])
 
-        # Update the axes with the new limits
+        # Set limits to axes
         self.ax.set_xlim(new_xlim)
         self.ax.set_ylim(new_ylim)
 
-        # Redraw the canvas to reflect the new zoom level
+        # Redraw the canvas
         self.canvas.draw()
 
-        # Apply the same zooming logic for the linked plot
+        # Apply zooming logic to linked plot (if applicable)
         if self.linker and self.isLinked:
             self._apply_zoom_to_linker(scale)
 
@@ -1340,219 +1350,208 @@ class SignalViewer(QWidget):
         if not self.panning or self.pan_start is None or event.inaxes != self.ax:
             return
 
-        # Calculate the difference in movement (dx for X axis)
+        # Get the difference in movement (dx for X-axis, dy for Y-axis)
         dx = self.pan_start[0] - event.xdata
+        dy = self.pan_start[1] - event.ydata
 
+        # Update the last mouse position
         self.last_mouse_x_position = event.xdata
+        self.last_mouse_y_position = event.ydata
 
-        # Get the current X limits of the plot
+        # Get the current limits of the plot
         cur_xlim = self.ax.get_xlim()
+        cur_ylim = self.ax.get_ylim()
 
-        # Calculate new X limits based on the pan
+        # Calculate new limits based on the pan
         new_xlim = [cur_xlim[0] + dx, cur_xlim[1] + dx]
+        new_ylim = [cur_ylim[0] + dy, cur_ylim[1] + dy]
 
-        # Ensure the new X-limits don't exceed the full data bounds
+        # Clamp the X-axis limits to the full data bounds
         full_x_min = min([s.time[0] for s in self.signals.values()])
-        full_x_max = max([s.time[min(s.current_frame, len(s.time) - 1)] for s in self.signals.values()])
-
-        # Limit X-axis panning with clamped values
+        full_x_max = max([s.time[min(s.current_frame, len(s.time)-1)] for s in self.signals.values()])
         new_xlim[0] = max(full_x_min, new_xlim[0])
         new_xlim[1] = min(full_x_max, new_xlim[1])
-
-        self.ax.set_xlim(new_xlim)
-
-        # Dynamic Y-limits based on visible signals within new X-limits
         visible_signals = [
             s.amplitude[(s.time >= new_xlim[0]) & (s.time <= new_xlim[1])] for s in self.signals.values()
         ]
 
         if visible_signals and any(len(v) > 0 for v in visible_signals):
+            # Calculate minimum and maximum of visible signal values
             visible_y_min = min([v.min() for v in visible_signals if len(v) > 0])
             visible_y_max = max([v.max() for v in visible_signals if len(v) > 0])
 
             # Add padding to the Y-limits (e.g., 5% of the range)
             y_range = visible_y_max - visible_y_min
-            padding = 0.05 * y_range if y_range > 0 else 0.1
+            y_padding = 0.05 * y_range if y_range > 0 else 0.1
 
-            self.ax.set_ylim(visible_y_min - padding, visible_y_max + padding)
+            new_y_min = visible_y_min - y_padding
+            new_y_max = visible_y_max + y_padding
 
+        # # Clamp the Y-axis limits to the data bounds
+        # full_y_min = min([min(s.amplitude) for s in self.signals.values()])
+        # full_y_max = max([max(s.amplitude) for s in self.signals.values()])
+        new_ylim[0] = max(new_y_min, new_ylim[0])
+        new_ylim[1] = min(new_y_max, new_ylim[1])
+
+        # Apply new limits to the axes
+        self.ax.set_xlim(new_xlim)
+        self.ax.set_ylim(new_ylim)
+
+        # Redraw the canvas to reflect changes
         self.canvas.draw()
 
-        # Now apply the same panning logic for the linked object
+        # Apply the same panning logic for the linked plot
         if self.linker and self.isLinked:
-            self._apply_panning_to_linker(dx)
+            self._apply_panning_to_linker(dx, dy)
 
-    def _apply_panning_to_linker(self, dx):
+    def _apply_panning_to_linker(self, dx, dy):
         """Applies the panning logic to the linked plot."""
-        # Get the current X limits for the linker
+        # Get the current limits for the linker
         cur_xlim_linker = self.linker.ax.get_xlim()
+        cur_ylim_linker = self.linker.ax.get_ylim()
 
-        # Calculate new X limits for the linker
+        # Calculate new limits for the linker
         new_xlim_linker = [cur_xlim_linker[0] + dx, cur_xlim_linker[1] + dx]
+        new_ylim_linker = [cur_ylim_linker[0] + dy, cur_ylim_linker[1] + dy]
 
-        # Ensure the new X-limits don't exceed the linker's data bounds
+        # Clamp the X-axis limits to the linker's data bounds
         full_x_min = min([s.time[0] for s in self.linker.signals.values()])
-        full_x_max = max([s.time[min(s.current_frame, len(s.time) - 1)] for s in self.linker.signals.values()])
-
-        # Limit X-axis panning with clamped values
+        full_x_max = max([s.time[min(s.current_frame, len(s.time)-1)] for s in self.linker.signals.values()])
         new_xlim_linker[0] = max(full_x_min, new_xlim_linker[0])
         new_xlim_linker[1] = min(full_x_max, new_xlim_linker[1])
 
-        self.linker.ax.set_xlim(new_xlim_linker)
-
-        # Dynamic Y-limits based on visible signals in new X-limits
         visible_signals = [
-            s.amplitude[(s.time >= new_xlim_linker[0]) & (s.time <= new_xlim_linker[1])] for s in
-            self.linker.signals.values()
+            s.amplitude[(s.time >= new_xlim_linker[0]) & (s.time <= new_xlim_linker[1])] for s in self.linker.signals.values()
         ]
 
         if visible_signals and any(len(v) > 0 for v in visible_signals):
+            # Calculate minimum and maximum of visible signal values
             visible_y_min = min([v.min() for v in visible_signals if len(v) > 0])
             visible_y_max = max([v.max() for v in visible_signals if len(v) > 0])
 
             # Add padding to the Y-limits (e.g., 5% of the range)
             y_range = visible_y_max - visible_y_min
-            padding = 0.05 * y_range if y_range > 0 else 0.1
+            y_padding = 0.05 * y_range if y_range > 0 else 0.1
 
-            self.linker.ax.set_ylim(visible_y_min - padding, visible_y_max + padding)
+            new_y_min = visible_y_min - y_padding
+            new_y_max = visible_y_max + y_padding
 
+        # # Clamp the Y-axis limits to the linker's data bounds
+        # full_y_min = min([min(s.amplitude) for s in self.linker.signals.values()])
+        # full_y_max = max([max(s.amplitude) for s in self.linker.signals.values()])
+        new_ylim_linker[0] = max(new_y_min, new_ylim_linker[0])
+        new_ylim_linker[1] = min(new_y_max, new_ylim_linker[1])
+
+        # Apply new limits to the linker axes
+        self.linker.ax.set_xlim(new_xlim_linker)
+        self.linker.ax.set_ylim(new_ylim_linker)
+
+        # Redraw the linker canvas to reflect changes
         self.linker.canvas.draw()
 
-    def zoom(self, scale=1.0):
-        """Zoom the plot by a scale factor centered at the plot center, with limits based on the current frame's data."""
-        if not self.signals:
-            return
 
-        # Store the current X position of the mouse for future zoom reset
-        if self.last_mouse_x_position is not None:
-            center_x = self.last_mouse_x_position
-        else:
-            # Default to plot center if no mouse position is recorded
-            center_x = self.get_plot_center()[0]
+    def _calculate_zoom_limits(self, cur_xlim, cur_ylim, scale, xdata, ydata):
+        """Calculate new zoom limits for X and Y axes with bounds and data visibility."""
+        # Define minimum and maximum zoom levels
+        min_x_range, max_x_range = 0.1, 100  # X-axis range bounds
+        min_y_range, max_y_range = 0.1, 100  # Y-axis range bounds
 
-        # Get the center of the current plot view
-        cur_xlim = self.ax.get_xlim()
-        cur_ylim = self.ax.get_ylim()
-        center = (
-            (cur_xlim[0] + cur_xlim[1]) / 2,
-            (cur_ylim[0] + cur_ylim[1]) / 2
-        )
-
-        xdata, ydata = center
-
-        # Get the limits of the current frame data across all signals
-        full_x_min = min([s.time[0] for s in self.signals.values()])
-        full_x_max = max([s.time[min(s.current_frame, len(s.time) - 1)] for s in self.signals.values()])
-
-        # Define minimum and maximum zoom scale factors to prevent excessive zooming
-        min_scale = 0.1  # Don't zoom in beyond this scale
-        max_scale = 10.0  # Don't zoom out beyond this scale
-
-        # Clamp the scale to prevent excessive zoom in/out
-        scale = max(min(scale, max_scale), min_scale)
-
-        # Calculate the new width and height based on the scale factor
+        # Calculate new width and height
         new_width = (cur_xlim[1] - cur_xlim[0]) * scale
         new_height = (cur_ylim[1] - cur_ylim[0]) * scale
 
-        # Adjust X limits (centered on the current view center)
-        new_xlim = [xdata - new_width * 0.5, xdata + new_width * 0.5]
+        # Enforce minimum and maximum zoom levels
+        if new_width < min_x_range or new_width > max_x_range:
+            new_width = cur_xlim[1] - cur_xlim[0]  # Lock X range if out of bounds
+        if new_height < min_y_range or new_height > max_y_range:
+            new_height = cur_ylim[1] - cur_ylim[0]  # Lock Y range if out of bounds
 
-        # Ensure the new X-limits don't exceed the current frame's data bounds
-        new_xlim[0] = max(full_x_min, new_xlim[0])  # Prevent zooming out too far to the left
-        new_xlim[1] = min(full_x_max, new_xlim[1])  # Prevent zooming out too far to the right
+        # Calculate relative zoom centered around the specified data point
+        relx = (xdata - cur_xlim[0]) / (cur_xlim[1] - cur_xlim[0])
+        rely = (ydata - cur_ylim[0]) / (cur_ylim[1] - cur_ylim[0])
 
-        self.ax.set_xlim(new_xlim)
+        # Calculate new X and Y limits
+        new_xlim = [
+            xdata - new_width * relx,
+            xdata + new_width * (1 - relx)
+        ]
+        new_ylim = [
+            ydata - new_height * rely,
+            ydata + new_height * (1 - rely)
+        ]
 
-        # Dynamic Y-limits based on visible signals within new X-limits
-        visible_signals = [s.amplitude[(s.time >= new_xlim[0]) & (s.time <= new_xlim[1])] for s in
-                           self.signals.values()]
+        # Clamp X limits to data bounds
+        full_x_min = min(s.time[0] for s in self.signals.values())
+        full_x_max = max(s.time[min(s.current_frame, len(s.time)-1)] for s in self.signals.values())
+        new_xlim[0] = max(full_x_min, new_xlim[0])
+        new_xlim[1] = min(full_x_max, new_xlim[1])
 
+        # Clamp Y limits based on visible signal bounds
+        visible_signals = [
+            s.amplitude[(s.time >= new_xlim[0]) & (s.time <= new_xlim[1])]
+            for s in self.signals.values()
+        ]
         if visible_signals and any(len(v) > 0 for v in visible_signals):
-            visible_y_min = min([v.min() for v in visible_signals if len(v) > 0])
-            visible_y_max = max([v.max() for v in visible_signals if len(v) > 0])
+            visible_y_min = min(v.min() for v in visible_signals if len(v) > 0)
+            visible_y_max = max(v.max() for v in visible_signals if len(v) > 0)
 
-            # Add padding to the Y-limits (5% of range)
+            # Add padding to Y-limits
             y_range = visible_y_max - visible_y_min
             padding = 0.05 * y_range if y_range > 0 else 0.1
 
-            # Adjust Y limits, preventing too much zoom-in or zoom-out
-            new_ylim = [
-                max(visible_y_min - padding, cur_ylim[0] - new_height * 0.5),
-                min(visible_y_max + padding, cur_ylim[1] + new_height * 0.5)
-            ]
+            new_ylim[0] = max(visible_y_min - padding, new_ylim[0])
+            new_ylim[1] = min(visible_y_max + padding, new_ylim[1])
 
-            self.ax.set_ylim(new_ylim)
+        return new_xlim, new_ylim
 
+    def zoom(self, scale=1.0):
+        """Zoom the plot by a scale factor centered at the plot center."""
+        if not self.signals:
+            return
+
+        # Use the last mouse X position or default to the plot center
+        if self.last_mouse_x_position is not None:
+            center_x = self.last_mouse_x_position
+        else:
+            center_x = self.get_plot_center()[0]
+
+        # Current plot view limits
+        cur_xlim = self.ax.get_xlim()
+        cur_ylim = self.ax.get_ylim()
+
+        # Calculate new limits using the core zoom logic
+        new_xlim, new_ylim = self._calculate_zoom_limits(
+            cur_xlim, cur_ylim, scale, center_x, (cur_ylim[0] + cur_ylim[1]) / 2
+        )
+
+        # Update axes with new limits
+        self.ax.set_xlim(new_xlim)
+        self.ax.set_ylim(new_ylim)
         self.canvas.draw()
 
-        # Apply zoom to linked plot if linked
+        # Apply zoom to linked plot if applicable
         if self.linker and self.isLinked:
             self._apply_zoom_to_linker(scale)
 
     def _apply_zoom_to_linker(self, scale):
-        """Applies the same zooming logic to the linked plot."""
+        """Apply the same zooming logic to the linked plot."""
+        if not self.linker or not self.linker.signals:
+            return
+
+        # Current plot view limits for the linker
         cur_xlim = self.linker.ax.get_xlim()
         cur_ylim = self.linker.ax.get_ylim()
-        center = (
-            (cur_xlim[0] + cur_xlim[1]) / 2,
-            (cur_ylim[0] + cur_ylim[1]) / 2
+
+        # Calculate new limits using the core zoom logic
+        center_x = (cur_xlim[0] + cur_xlim[1]) / 2
+        center_y = (cur_ylim[0] + cur_ylim[1]) / 2
+        new_xlim, new_ylim = self._calculate_zoom_limits(
+            cur_xlim, cur_ylim, scale, center_x, center_y
         )
 
-        xdata, ydata = center
-
-        # Get the limits of the current frame data across all linked signals
-        full_x_min = min([s.time[0] for s in self.linker.signals.values()])
-        full_x_max = max([s.time[min(s.current_frame, len(s.time) - 1)] for s in self.linker.signals.values()])
-
-        # Define minimum and maximum zoom scale factors
-        min_scale = 0.1
-        max_scale = 10.0
-
-        # Clamp the scale to prevent excessive zoom in/out
-        scale = max(min(scale, max_scale), min_scale)
-
-        # Calculate new width and height based on zoom scale
-        new_width = (cur_xlim[1] - cur_xlim[0]) * scale
-        new_height = (cur_ylim[1] - cur_ylim[0]) * scale
-
-        # Adjust X and Y limits
-        new_xlim = [
-            xdata - new_width * 0.5,
-            xdata + new_width * 0.5
-        ]
-        new_ylim = [
-            ydata - new_height * 0.5,
-            ydata + new_height * 0.5
-        ]
-
-        # Ensure the new X-limits don't exceed the current frame's data bounds
-        new_xlim[0] = max(full_x_min, new_xlim[0])
-        new_xlim[1] = min(full_x_max, new_xlim[1])
-
-        # Dynamic Y-limits based on visible signals within new X-limits
-        visible_signals = [s.amplitude[(s.time >= new_xlim[0]) & (s.time <= new_xlim[1])] for s in
-                           self.linker.signals.values()]
-
-        if visible_signals and any(len(v) > 0 for v in visible_signals):
-            visible_y_min = min([v.min() for v in visible_signals if len(v) > 0])
-            visible_y_max = max([v.max() for v in visible_signals if len(v) > 0])
-
-            # Add padding to the Y-axis
-            y_range = visible_y_max - visible_y_min
-            padding = 0.05 * y_range if y_range > 0 else 0.1
-
-            # Adjust Y limits, preventing too much zoom-in or zoom-out
-            new_ylim = [
-                max(visible_y_min - padding, new_ylim[0]),
-                min(visible_y_max + padding, new_ylim[1])
-            ]
-
-        # Update the axes with the new limits
+        # Update axes for the linker
         self.linker.ax.set_xlim(new_xlim)
         self.linker.ax.set_ylim(new_ylim)
-
-        # Redraw the canvas to reflect the new zoom level
         self.linker.canvas.draw()
 
     def reset_zoom(self):
