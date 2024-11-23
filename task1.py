@@ -1638,52 +1638,77 @@ class SignalViewer(QWidget):
 class CustomToolbar2(QWidget):
     def __init__(self, parent=None):
         super(CustomToolbar2, self).__init__(parent)
+
+        # Main layout for the toolbar
         self.layout = QVBoxLayout()
 
-        # Set dark blue mode style for the toolbar
-        # Set modern gray and white style for the toolbar
+        # Create a GroupBox for buttons
+        buttons_group = QGroupBox("Controls")
+        buttons_layout = QVBoxLayout()  # Use vertical layout for buttons inside the group box
+
+        # Create buttons
+        self.upload_button = QPushButton("Upload")
+        self.signal_select = QComboBox()
+        self.color_button = QPushButton("Select Color")
+        self.play_button = QPushButton("Play")
+        self.reset_button = QPushButton("Reset")
+        self.delete_button = QPushButton("Delete")
+
+        # Add buttons to the layout
+        buttons_layout.addWidget(self.upload_button)
+        buttons_layout.addWidget(QLabel("Signal:"))
+        buttons_layout.addWidget(self.signal_select)
+        buttons_layout.addWidget(self.color_button)
+        buttons_layout.addWidget(self.play_button)
+        buttons_layout.addWidget(self.reset_button)
+        buttons_layout.addWidget(self.delete_button)
+
+        # Set layout for the GroupBox
+        buttons_group.setLayout(buttons_layout)
+
+        # Add movement speed slider
+        slider_group = QGroupBox("Movement Speed")
+        slider_layout = QVBoxLayout()
+        self.speed_slider = QSlider(Qt.Horizontal)
+        self.speed_slider.setMinimum(1)
+        self.speed_slider.setMaximum(100)
+        self.speed_slider.setValue(1)
+        slider_label = QLabel("Adjust speed:")
+        slider_layout.addWidget(slider_label)
+        slider_layout.addWidget(self.speed_slider)
+        slider_group.setLayout(slider_layout)
+
+        # Add GroupBoxes to the main layout
+        self.layout.addWidget(buttons_group)
+        self.layout.addWidget(slider_group)
+
+        # Apply layout to the widget
+        self.setLayout(self.layout)
+
+        # Set style for the GroupBox and buttons
         self.setStyleSheet("""
-            QWidget {
-                background-color: #f7f7f7;
-                color: #333333;
+            QGroupBox {
+                border: 1px solid #cccccc;
                 border-radius: 10px;
+                margin-top: 10px;
+                padding: 10px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                padding: 0 3px;
+                background-color: #f0f0f0;
+                border-radius: 5px;
             }
             QPushButton {
                 background-color: #e0e0e0;
                 border: none;
-                padding: 5px 15px;
+                padding: 8px 15px;
                 border-radius: 5px;
                 color: #333333;
-                min-width: 80px;
-                margin: 2px;
             }
             QPushButton:hover {
                 background-color: #d0d0d0;
-            }
-            QPushButton:disabled {
-                background-color: #c0c0c0;
-                color: #888888;
-            }
-            QComboBox {
-                background-color: #ffffff;
-                border: 1px solid #cccccc;
-                padding: 5px;
-                border-radius: 5px;
-                min-width: 150px;
-            }
-            QComboBox:hover {
-                background-color: #f0f0f0;
-            }
-            QComboBox::drop-down {
-                border: none;
-                width: 20px;
-            }
-            QComboBox::down-arrow {
-                image: none;
-                border-left: 5px solid transparent;
-                border-right: 5px solid transparent;
-                border-top: 5px solid #333333;
-                margin-right: 5px;
             }
             QSlider::groove:horizontal {
                 background: #e0e0e0;
@@ -1697,136 +1722,42 @@ class CustomToolbar2(QWidget):
                 margin: -6px 0;
                 border-radius: 8px;
             }
-            QSlider::handle:horizontal:hover {
-                background: #909090;
-            }
             QLabel {
                 color: #333333;
-                margin: 0 5px;
             }
         """)
-
-        buttons_layout = QHBoxLayout()
-        self.upload_button = QPushButton("Upload")
-        buttons_layout.addWidget(self.upload_button)
-        self.signal_select = QComboBox()
-        buttons_layout.addWidget(self.signal_select)
-        self.color_button = QPushButton("Select Color")
-        buttons_layout.addWidget(self.color_button)
-        self.play_button = QPushButton("Play")
-        buttons_layout.addWidget(self.play_button)
-        self.reset_button = QPushButton("Reset")
-        buttons_layout.addWidget(self.reset_button)
-        self.delete_button = QPushButton("Delete")
-        buttons_layout.addWidget(self.delete_button)
-
-        self.speed_slider = QSlider(Qt.Horizontal)
-        self.speed_slider.setMinimum(1)
-        self.speed_slider.setMaximum(100)
-        self.speed_slider.setValue(1)
-        speed_label = QLabel("Movement Speed")
-        buttons_layout.addWidget(speed_label)
-        buttons_layout.addWidget(self.speed_slider)
-
-        self.layout.addLayout(buttons_layout)
-        self.setLayout(self.layout)
-
-        # Additional spacing and margins for better appearance
-        self.layout.setContentsMargins(10, 10, 10, 10)
-        self.layout.setSpacing(10)
-
-        # Disable buttons initially until a signal is uploaded
-        self.play_button.setEnabled(False)
-        self.color_button.setEnabled(False)
-        self.reset_button.setEnabled(False)
-        self.delete_button.setEnabled(False)
 
 
 class RadarViewer(QWidget):
     def __init__(self, parent=None):
         super(RadarViewer, self).__init__(parent)
-        main_layout = QVBoxLayout()
 
-        # Set up light mode style
+        # استخدم تخطيط أفقي
+        main_layout = QHBoxLayout()
+
+        # إعداد الرادار
         plt.style.use('default')
         self.figure, self.ax = plt.subplots(subplot_kw={'projection': 'polar'}, figsize=(5, 5))
 
-        # Set a light background for the figure and plot area
         self.figure.patch.set_facecolor('white')
         self.ax.set_facecolor('white')
-
-        # Customize grid and axis lines for light mode
         self.ax.grid(color='#cccccc', linestyle='--', alpha=0.7)
         self.ax.spines['polar'].set_color('#cccccc')
 
-        # # Set up dark mode style
-        # plt.style.use('dark_background')
-        # self.figure, self.ax = plt.subplots(subplot_kw={'projection': 'polar'}, figsize=(8, 8))
-        #
-        # # Customize plot appearance for dark mode with blue background
-        # self.figure.patch.set_facecolor('#1a1a2e')  # Dark blue background for the figure
-        # self.ax.set_facecolor('#1a1a2e')  # Dark blue background for the plot area
-        #
-        # # Customize grid and axis lines
-        # self.ax.grid(color='#2a2a4e', linestyle='--', alpha=0.7)
-        # self.ax.spines['polar'].set_color('#2a2a4e')
-
-        # Set up the range and angle lines
         self.ax.set_rmax(20)
-
-        # Remove default angle labels
         self.ax.set_xticklabels([])
-
-        # Add custom angle labels
         angles_deg = np.arange(0, 360, 45)
         angles_rad = np.deg2rad(angles_deg)
-
-        # Position labels slightly outside the outermost grid line
-        radius = 20 * 1.1  # 10% outside the maximum radius
-
-        # for angle_deg, angle_rad in zip(angles_deg, angles_rad):
-        #     x = radius * np.cos(angle_rad)
-        #     y = radius * np.sin(angle_rad)
-        #     # Use transform to handle the coordinate conversion
-        #     self.ax.text(angle_rad, radius, f'{angle_deg}°',
-        #                  ha='center', va='center',
-        #                  color='#8888aa',
-        #                  fontsize=10)
-        #
-        # # Customize radial ticks
-        # self.ax.tick_params(axis='y', colors='#8888aa', labelsize=8)
-
+        radius = 20 * 1.1
         for angle_deg, angle_rad in zip(angles_deg, angles_rad):
             self.ax.text(angle_rad, radius, f'{angle_deg}°',
                          ha='center', va='center',
                          color='#333333', fontsize=10)
 
-        # Customize radial ticks for better contrast
         self.ax.tick_params(axis='y', colors='#333333', labelsize=8)
 
         self.canvas = FigureCanvas(self.figure)
 
-        self.setStyleSheet("""
-            QWidget {
-                background-color: #f8f8f8;
-            }
-            QVBoxLayout {
-                margin: 0;
-                padding: 0;
-            }
-        """)
-
-        # # Set blue background for the widget
-        # self.setStyleSheet("""
-        #     QWidget {
-        #         background-color: #0a0a1e;
-        #     }
-        #     QVBoxLayout {
-        #         margin: 0;
-        #         padding: 0;
-        #     }
-        # """)
-        # Create a frame for the canvas with a light border
         canvas_frame = QFrame()
         canvas_frame.setStyleSheet("""
             QFrame {
@@ -1836,42 +1767,36 @@ class RadarViewer(QWidget):
                 padding: 10px;
             }
         """)
-
-        # # Create a frame for the canvas with a blue background
-        # canvas_frame = QFrame()
-        # canvas_frame.setStyleSheet("""
-        #     QFrame {
-        #         background-color: #1a1a2e;
-        #         border-radius: 10px;
-        #         padding: 10px;
-        #     }
-        # """)
         canvas_layout = QVBoxLayout()
         canvas_layout.addWidget(self.canvas)
         canvas_frame.setLayout(canvas_layout)
 
-        main_layout.addWidget(canvas_frame)
-        self.toolbar = CustomToolbar2(self)
-        main_layout.addWidget(self.toolbar)
+        # اضف الرادار كـ "تلتين" الشاشة
+        main_layout.addWidget(canvas_frame, stretch=2)
 
-        # Add some margins around the main layout
+        # إعداد الزراير باستخدام CustomToolbar2
+        self.toolbar = CustomToolbar2(self)
+
+        # اضف الزراير كـ "تلت" الشاشة
+        main_layout.addWidget(self.toolbar, stretch=1)
+
+        # إعداد التخطيط الرئيسي
         main_layout.setContentsMargins(10, 10, 10, 10)
         main_layout.setSpacing(10)
-
         self.setLayout(main_layout)
 
+        # إعداد المؤقت والإشارات
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_signal)
         self.signal_data_list = []
         self.current_indices = []
-        # Updated colors for better visibility on blue background
         self.signal_colors = ['#ff4444', '#44ff44', '#4444ff', '#ffaa44', '#ff44ff', '#44ffff',
                               '#ff8888', '#88ff88', '#8888ff', '#ffcc88', '#ff88ff', '#88ffff']
         self.selected_index = -1
         self.movement_speed = 0.001
         self.is_playing = False
 
-        # Connect buttons
+        # توصيل الأزرار بالإشارات
         self.toolbar.upload_button.clicked.connect(self.upload_signal)
         self.toolbar.play_button.clicked.connect(self.toggle_play_pause)
         self.toolbar.color_button.clicked.connect(self.select_color)
@@ -1881,11 +1806,6 @@ class RadarViewer(QWidget):
         self.toolbar.signal_select.addItems([])
         self.toolbar.signal_select.currentIndexChanged.connect(self.update_selected_signal)
 
-    # def update_toolbar_style(self):
-    #     # Example method to set toolbar colors
-    #     self.toolbar.setStyleSheet("background-color: #2E2E2E; color: white;")  # Darker background for the toolbar
-    #     for button in self.toolbar.findChildren(QPushButton):
-    #         button.setStyleSheet("background-color: #4E4E4E; color: white;")  # Button colors
     def update_toolbar_style(self):
         # Example method to set toolbar colors for light mode
         self.toolbar.setStyleSheet("background-color: #f0f0f0; color: black;")
@@ -1906,12 +1826,14 @@ class RadarViewer(QWidget):
             voltage_data = data.iloc[:, 1].values  # Voltage column
             self.signal_data_list.append((time_data, voltage_data))
             self.current_indices.append(0)
-            signal_name = f"Signal {len(self.signal_data_list)}"
-            self.toolbar.signal_select.addItem(signal_name)
+
+            # استخدم اسم الملف كاسم الإشارة
+            signal_name = file_name.split('/')[-1].split('.')[0]  # يأخذ اسم الملف بدون الامتداد
+            self.toolbar.signal_select.addItem(signal_name)  # إضافة اسم الإشارة للقائمة
+
             self.toolbar.signal_select.setCurrentIndex(len(self.signal_data_list) - 1)  # Update to newly added signal
             self.update_buttons()
-            # self.toolbar.reset_button.setEnabled(True)  # Enable reset button
-            # self.toolbar.start_button.setEnabled(True)
+
             self.start_signal()
 
         except Exception as e:
@@ -1944,8 +1866,7 @@ class RadarViewer(QWidget):
 
     def update_signal(self):
         self.ax.clear()  # Clear previous plot
-        # self.ax.set_facecolor('#1E1E1E')  # Set axes background color to dark
-        self.ax.set_facecolor('white')
+        self.ax.set_facecolor('white')  # Set axes background color to white
 
         # Iterate through signal data
         for idx, (time_data, voltage_data) in enumerate(self.signal_data_list):
@@ -1956,9 +1877,12 @@ class RadarViewer(QWidget):
                 # Calculate the angle in radians for polar coordinates
                 theta = (time_data[current_index] - time_data[0]) / (time_data[-1] - time_data[0]) * 2 * np.pi
 
-                # Plot the current data point
+                # Get the signal name from the toolbar dropdown
+                signal_name = self.toolbar.signal_select.itemText(idx)
+                short_signal_name = signal_name[:5]
+
                 self.ax.plot(theta, voltage_data[current_index], 'o', color=self.signal_colors[idx],
-                             label=f'Signal {idx + 1}')
+                             label=short_signal_name)
 
                 # If there are previous points, plot the line connecting them
                 if current_index > 0:
@@ -1970,19 +1894,21 @@ class RadarViewer(QWidget):
             else:
                 self.current_indices[idx] = len(voltage_data)  # Reset to the end of voltage data
 
+
+
         # Set title and its color
-        self.ax.set_title("Signals Viewer in Polar Coordinates", color='black')  # Title color to white
+        self.ax.set_title("Signals Viewer in Polar Coordinates", color='black')  # Title color to black
 
         # Set limits for the y-axis, ensuring all signals are visible
         self.ax.set_ylim([np.min([v[1] for v in self.signal_data_list]), np.max([v[1] for v in self.signal_data_list])])
 
-        # Set tick colors to white
-        self.ax.tick_params(colors='black')  # Set tick mark colors to white
+        # Set tick colors to black
+        self.ax.tick_params(colors='black')  # Set tick mark colors to black
 
-        # Set legend properties
+        # Set legend properties (optional)
         legend = self.ax.legend()
         for text in legend.get_texts():
-            text.set_color('black')  # Set legend text color to white
+            text.set_color('black')  # Set legend text color to black
 
         # Draw the updated canvas
         self.canvas.draw()
