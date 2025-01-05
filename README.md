@@ -9,13 +9,12 @@ Monitoring vital signals is crucial in any ICU room. This project aims to develo
 
 ### 1. **File Browsing and Signal Management**
 - Users can browse their PC to open any signal file.
-- Supports three different medical signal types (e.g., ECG, EMG, EEG) with examples of both normal and abnormal signals.
 
 *(Insert image/video of file browsing and signal loading UI)*
 
 ### 2. **Real-Time Signal Streaming**
-- Connect to a website that emits signals in real time, read the emitted signal, and plot it dynamically.
-- Groups must identify unique websites for real-time signal streaming; these websites are allocated on a "first-to-deliver" basis.
+- Connected to a website that emits radio signals in real time and plot it dynamically.
+  
 
 *(Insert image/video demonstrating real-time signal streaming)*
 
@@ -23,18 +22,17 @@ Monitoring vital signals is crucial in any ICU room. This project aims to develo
 - Two identical rectangular graphs:
   - Independent signal management for each graph.
   - Option to link graphs to synchronize time frames, signal speed, and viewport (zoom/pan).
-  - When unlinked, graphs operate independently.
-
+    
 *(Insert image showing linked/unlinked graph configurations)*
 
 ### 4. **Non-Rectangle Graph**
-- Includes one non-rectangle graph for cine mode signal visualization. The design and functionality of this graph are unique and signal-specific.
+- Includes one non-rectangle graph for cine mode signal visualization. We plot medical signals in Polar form .
 
 *(Insert image/video of non-rectangle graph in action)*
 
 ### 5. **Cine Mode**
 - Signals are displayed dynamically in cine mode, mimicking ICU monitors.
-- Signals automatically rewind or stop at the end, based on user settings.
+
 
 *(Insert video of cine mode visualization)*
 
@@ -73,20 +71,17 @@ Users can perform the following manipulations via the UI:
 
 ## Project Structure
 
-### Directories
-- **src/**: Source code.
-- **data/**: Sample medical signal files (ECG, EMG, EEG).
-- **reports/**: Generated PDF reports.
-- **docs/**: Documentation and user guides.
+
+
+
 
 ### Files
 - **README.md**: Project overview and setup instructions.
 - **requirements.txt**: List of dependencies.
-- **main.py**: Entry point for the application.
-- **glue_utils.py**: Signal glue and interpolation logic.
-- **pdf_report.py**: PDF generation logic.
-- **real_time_stream.py**: Real-time signal streaming handler.
-- **ui_design.ui**: Qt Designer file for UI layout.
+- **task1.py**: Entry point for the application.
+- **GluedSignalViewer.py**: Signal glue and interpolation logic.
+- **backend_vs_code.py**: Real-time signal streaming handler.
+- - **signals/**: Sample medical signal files (ECG, EMG, EEG).
 
 ---
 
@@ -94,18 +89,15 @@ Users can perform the following manipulations via the UI:
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/your-username/multi-channel-signal-viewer.git
+   git clone [https://github.com/your-username/multi-channel-signal-viewer.git](https://github.com/Ziadmohammed200/Signal-Viewer.git](https://github.com/Ziadmohammed200/Signal-Viewer.git)
    cd multi-channel-signal-viewer
    ```
 
-2. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+
 
 3. **Run the Application**:
    ```bash
-   python main.py
+   python task1.py
    ```
 
 ---
@@ -117,7 +109,7 @@ Users can perform the following manipulations via the UI:
    *(Insert image showing signal file selection)*
 
 2. **Stream Real-Time Signals**:
-   - Connect to a real-time signal website via the provided interface.
+   - Stream Real-Time Radio Signal .
    *(Insert video demonstrating real-time signal streaming interface)*
 
 3. **Manipulate Graphs**:
@@ -141,5 +133,5 @@ This project is licensed under the MIT License. See `LICENSE` for details.
 
 ## Acknowledgments
 - ICU monitor inspiration for cine mode.
-- Contributions from [Team Name/Group].
+- Contributions from [Team 9].
 
