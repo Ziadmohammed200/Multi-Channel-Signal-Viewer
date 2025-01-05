@@ -10,25 +10,27 @@ Monitoring vital signals is crucial in any ICU room. This project aims to develo
 ### 1. **File Browsing and Signal Management**
 - Users can browse their PC to open any signal file.
 
-*(Insert image/video of file browsing and signal loading UI)*
+[*(Insert image/video of file browsing and signal loading UI)*](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/browse.png)
 
-### 2. **Real-Time Signal Streaming**
-- Connected to a website that emits radio signals in real time and plot it dynamically.
-  
 
-*(Insert image/video demonstrating real-time signal streaming)*
 
-### 3. **Graph Configuration**
+### 2. **Graph Configuration**
 - Two identical rectangular graphs:
   - Independent signal management for each graph.
   - Option to link graphs to synchronize time frames, signal speed, and viewport (zoom/pan).
     
-*(Insert image showing linked/unlinked graph configurations)*
+[images/viewers.png](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/viewers.png)
+
+### 3. **Real-Time Signal Streaming**
+- Connected to a website that emits radio signals in real time and plot it dynamically.
+  
+
+
 
 ### 4. **Non-Rectangle Graph**
 - Includes one non-rectangle graph for cine mode signal visualization. We plot medical signals in Polar form .
 
-*(Insert image/video of non-rectangle graph in action)*
+[*(Insert image/video of non-rectangle graph in action)*](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/nonrectangularandreal.png)
 
 ### 5. **Cine Mode**
 - Signals are displayed dynamically in cine mode, mimicking ICU monitors.
@@ -47,7 +49,8 @@ Users can perform the following manipulations via the UI:
 - **Boundary Constraints:** Prevent scrolling or panning beyond signal limits.
 - **Move Signals:** Transfer signals between graphs seamlessly.
 
-*(Insert image demonstrating signal manipulations and controls)*
+[*(Insert image demonstrating signal manipulations and controls)*](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/changecolor.png)
+https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/changespeed.png
 
 ### 7. **Signal Glue**
 - Cut segments from two signals (one from each graph) and merge them in a third graph using signal interpolation.
@@ -81,7 +84,7 @@ Users can perform the following manipulations via the UI:
 - **task1.py**: Entry point for the application.
 - **GluedSignalViewer.py**: Signal glue and interpolation logic.
 - **backend_vs_code.py**: Real-time signal streaming handler.
-- - **signals/**: Sample medical signal files (ECG, EMG, EEG).
+- **signals/**: Sample medical signal files (ECG, EMG, EEG).
 
 ---
 
