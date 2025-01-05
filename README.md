@@ -10,33 +10,29 @@ Monitoring vital signals is crucial in any ICU room. This project aims to develo
 ### 1. **File Browsing and Signal Management**
 - Users can browse their PC to open any signal file.
 
-[*(Insert image/video of file browsing and signal loading UI)*](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/browse.png)
-
-
+![File Browsing UI](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/browse.png)
 
 ### 2. **Graph Configuration**
 - Two identical rectangular graphs:
   - Independent signal management for each graph.
   - Option to link graphs to synchronize time frames, signal speed, and viewport (zoom/pan).
-    
-[images/viewers.png](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/viewers.png)
+
+![Graph Configuration](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/viewers.png)
 
 ### 3. **Real-Time Signal Streaming**
-- Connected to a website that emits radio signals in real time and plot it dynamically.
-  
+- Connected to a website that emits radio signals in real time and plots them dynamically.
 
-
+![Real-Time Signal Streaming](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/streaming.png)
 
 ### 4. **Non-Rectangle Graph**
-- Includes one non-rectangle graph for cine mode signal visualization. We plot medical signals in Polar form .
+- Includes one non-rectangle graph for cine mode signal visualization. Medical signals are plotted in polar form.
 
-[*(Insert image/video of non-rectangle graph in action)*](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/nonrectangularandreal.png)
+![Non-Rectangle Graph](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/nonrectangularandreal.png)
 
 ### 5. **Cine Mode**
 - Signals are displayed dynamically in cine mode, mimicking ICU monitors.
 
-
-*(Insert video of cine mode visualization)*
+![Cine Mode Visualization](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/cinemode.png)
 
 ### 6. **Signal Manipulations**
 Users can perform the following manipulations via the UI:
@@ -49,8 +45,9 @@ Users can perform the following manipulations via the UI:
 - **Boundary Constraints:** Prevent scrolling or panning beyond signal limits.
 - **Move Signals:** Transfer signals between graphs seamlessly.
 
-[*(Insert image demonstrating signal manipulations and controls)*](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/changecolor.png)
-https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/changespeed.png
+![Signal Manipulations](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/changecolor.png)
+
+![Cine Speed Control](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/changespeed.png)
 
 ### 7. **Signal Glue**
 - Cut segments from two signals (one from each graph) and merge them in a third graph using signal interpolation.
@@ -59,7 +56,7 @@ https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c28557
   - Gap (positive distance) or overlap (negative distance) between signals.
   - Interpolation order.
 
-*(Insert image/video of the glue operation process)*
+![Signal Glue Operation](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/glue.png)
 
 ### 8. **Exporting & Reporting**
 - Generate a report of the glue operation with:
@@ -68,15 +65,11 @@ https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c28557
 - Export reports to a well-organized PDF (generated programmatically).
 - Include tables for statistics and multi-page layouts for multiple signals and snapshots.
 
-*(Insert image of a sample report and statistics table)*
+![Exported Report Sample](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/report.png)
 
 ---
 
 ## Project Structure
-
-
-
-
 
 ### Files
 - **README.md**: Project overview and setup instructions.
@@ -92,11 +85,14 @@ https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c28557
 
 1. **Clone the Repository**:
    ```bash
-   git clone [https://github.com/your-username/multi-channel-signal-viewer.git](https://github.com/Ziadmohammed200/Signal-Viewer.git](https://github.com/Ziadmohammed200/Signal-Viewer.git)
-   cd multi-channel-signal-viewer
+   git clone https://github.com/Ziadmohammed200/Signal-Viewer.git
+   cd Signal-Viewer
    ```
 
-
+2. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 3. **Run the Application**:
    ```bash
@@ -109,23 +105,28 @@ https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c28557
 
 1. **Open Signal Files**:
    - Use the "Browse" button to select signal files.
-   *(Insert image showing signal file selection)*
+   
+     ![File Selection](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/browse.png)
 
 2. **Stream Real-Time Signals**:
-   - Stream Real-Time Radio Signal .
-   *(Insert video demonstrating real-time signal streaming interface)*
+   - Stream real-time radio signals.
+
+     ![Real-Time Streaming](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/streaming.png)
 
 3. **Manipulate Graphs**:
    - Use UI controls to customize the signal display, link/unlink graphs, and adjust cine speed.
-   *(Insert image showing graph manipulation controls)*
+
+     ![Graph Manipulation Controls](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/changespeed.png)
 
 4. **Glue Signals**:
    - Cut and merge signals using the "Signal Glue" tab.
-   *(Insert video showcasing the glue operation)*
+
+     ![Glue Operation](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/glue.png)
 
 5. **Generate Reports**:
    - Export glued signal statistics and snapshots to a PDF via the "Export Report" button.
-   *(Insert image showing a generated report preview)*
+
+     ![Generated Report Preview](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/report.png)
 
 ---
 
