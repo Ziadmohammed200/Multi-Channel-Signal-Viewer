@@ -43,7 +43,7 @@ from reportlab.lib.utils import ImageReader
 from PIL import Image
 
 
-# from backend_vs_code import stream_audio
+from backend_vs_code import stream_audio
 
 
 def stream_audio(url):
