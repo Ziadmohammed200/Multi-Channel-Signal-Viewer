@@ -22,8 +22,6 @@ Monitoring vital signals is crucial in any ICU room. This project aims to develo
 ### 3. **Real-Time Signal Streaming**
 - Connected to a website that emits radio signals in real time and plots them dynamically.
 
-![Real-Time Signal Streaming](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/streaming.png)
-
 ### 4. **Non-Rectangle Graph**
 - Includes one non-rectangle graph for cine mode signal visualization. Medical signals are plotted in polar form.
 
@@ -32,7 +30,7 @@ Monitoring vital signals is crucial in any ICU room. This project aims to develo
 ### 5. **Cine Mode**
 - Signals are displayed dynamically in cine mode, mimicking ICU monitors.
 
-![Cine Mode Visualization](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/cinemode.png)
+
 
 ### 6. **Signal Manipulations**
 Users can perform the following manipulations via the UI:
@@ -106,28 +104,25 @@ Users can perform the following manipulations via the UI:
 1. **Open Signal Files**:
    - Use the "Browse" button to select signal files.
    
-     ![File Selection](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/browse.png)
+    
 
 2. **Stream Real-Time Signals**:
    - Stream real-time radio signals.
 
-     ![Real-Time Streaming](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/streaming.png)
+     
 
 3. **Manipulate Graphs**:
    - Use UI controls to customize the signal display, link/unlink graphs, and adjust cine speed.
 
-     ![Graph Manipulation Controls](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/changespeed.png)
-
+     
 4. **Glue Signals**:
    - Cut and merge signals using the "Signal Glue" tab.
 
-     ![Glue Operation](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/glue.png)
-
+    
 5. **Generate Reports**:
    - Export glued signal statistics and snapshots to a PDF via the "Export Report" button.
 
-     ![Generated Report Preview](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/report.png)
-
+     
 ---
 
 ## License
