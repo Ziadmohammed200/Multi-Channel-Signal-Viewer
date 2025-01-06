@@ -54,8 +54,8 @@ Users can perform the following manipulations via the UI:
   - Gap (positive distance) or overlap (negative distance) between signals.
   - Interpolation order.
 
-![Signal Glue Operation](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/glue.png)
-
+![Signal Glue Operation](https://github.com/Ziadmohammed200/Multi-Channel-Signal-Viewer/blob/d1f3cccfff5477b925553d7897f7faa2daff6dc5/images/glue1.png)
+![Signal Glue Operation2](https://github.com/Ziadmohammed200/Multi-Channel-Signal-Viewer/blob/d1f3cccfff5477b925553d7897f7faa2daff6dc5/images/glue2.png)
 ### 8. **Exporting & Reporting**
 - Generate a report of the glue operation with:
   - Snapshots of the glued signal.
@@ -63,7 +63,6 @@ Users can perform the following manipulations via the UI:
 - Export reports to a well-organized PDF (generated programmatically).
 - Include tables for statistics and multi-page layouts for multiple signals and snapshots.
 
-![Exported Report Sample](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/report.png)
 
 ---
 
