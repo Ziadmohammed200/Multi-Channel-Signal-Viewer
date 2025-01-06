@@ -137,5 +137,9 @@ This project is licensed under the MIT License. See `LICENSE` for details.
 
 ## Acknowledgments
 - ICU monitor inspiration for cine mode.
-- Contributions from [Team 9].
+## Contributors
+- [Ziad Mohamed](https://github.com/Ziadmohammed200) 
+- [Marcilino Adel](https://github.com/marcilino-adel)
+- [Ahmed Etman](https://github.com/AhmedEtma)
+- [Pavly Awad](https://github.com/PavlyAwad)
 
