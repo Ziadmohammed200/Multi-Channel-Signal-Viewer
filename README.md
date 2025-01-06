@@ -62,6 +62,7 @@ Users can perform the following manipulations via the UI:
   - Data statistics (mean, standard deviation, duration, min/max values).
 - Export reports to a well-organized PDF (generated programmatically).
 - Include tables for statistics and multi-page layouts for multiple signals and snapshots.
+ ![Signal Glue Snaps](https://github.com/Ziadmohammed200/Multi-Channel-Signal-Viewer/blob/a88655416ef3c4653b1eb8c07bf7c2c1d64e129a/snapshot_1.png)
 
 
 ---
