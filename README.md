@@ -10,7 +10,7 @@ Monitoring vital signals is crucial in any ICU room. This project aims to develo
 ### 1. **File Browsing and Signal Management**
 - Users can browse their PC to open any signal file.
 
-![File Browsing UI](https://github.com/Ziadmohammed200/Signal-Viewer/blob/c2e0ff803b3f8a175e33c285577219df036697ce/images/browse.png)
+
 
 ### 2. **Graph Configuration**
 - Two identical rectangular graphs:
